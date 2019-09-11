@@ -1,0 +1,7 @@
+{
+  "extends": "talktofill",
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true
+  }
+}
