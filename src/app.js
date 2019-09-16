@@ -1,49 +1,31 @@
 import {
   PerspectiveCamera,
-  Scene,
-  BoxGeometry,
-  MeshNormalMaterial,
-  Mesh,
-  WebGLRenderer,
-  Color,
-  Fog,
-  DirectionalLight,
-  Group,
-  PlaneBufferGeometry,
-  MeshBasicMaterial
+  WebGLRenderer
 } from 'three';
-
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import City from './components/City';
 
-let camera;
-let scene;
-let renderer;
-let geometry;
-let material;
-let mesh;
+// Styles
+import 'normalize.css';
+import './styles/app.scss';
 
-init();
-animate();
+const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 100, 5000);
+camera.position.set(0, 120, 400);
 
-function init() {
-  camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1500);
-  camera.position.set(0, 0.1, 2);
+const DarwinCity = new City();
+camera.lookAt(DarwinCity.cars[0]);
 
-  scene = new Scene();
-  scene.background = new Color(0xf1f1f1);
+const renderer = new WebGLRenderer({antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const DarwinCity = new City();
-  scene.add(DarwinCity.model);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.maxDistance = 1000;
 
-  // scene.add(mesh);
+document.querySelector('#scene').appendChild(renderer.domElement);
 
-  renderer = new WebGLRenderer({antialias: true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-}
+(function animate() {
+  DarwinCity.update();
 
-function animate() {
+  renderer.render(DarwinCity.scene, camera);
   requestAnimationFrame(animate);
-
-  renderer.render(scene, camera);
-}
+}());
