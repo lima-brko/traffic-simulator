@@ -4,7 +4,8 @@
   "description": "An experimental city controlled by AI",
   "main": "src/app.js",
   "scripts": {
-    "start": "export NODE_ENV=development && webpack-dev-server"
+    "start": "export NODE_ENV=development && webpack-dev-server",
+    "build": "export NODE_ENV=production && webpack"
   },
   "author": "",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "@babel/preset-env": "^7.6.0",
     "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.2.0",
     "eslint": "^5.16.0",
     "eslint-config-talktofill": "^1.0.5",

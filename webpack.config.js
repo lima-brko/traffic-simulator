@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -10,7 +11,7 @@ const config = {
     app: path.join(__dirname, 'src/app')
   },
   output: {
-    filename: '[name].bundle.js'
+    filename: devMode ? '[name].bundle.js' : '[name].[hash].bundle.js'
   },
   module: {
     rules: [
@@ -48,6 +49,7 @@ const config = {
     }
   },
   plugins: [
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: 'AI City',
       template: path.join(__dirname, 'src/views/home.html')
