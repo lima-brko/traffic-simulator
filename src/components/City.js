@@ -9,7 +9,8 @@ import {
 import House from './House';
 import Car from './Car';
 import Street from './Street';
-import CityMatrix from './CityMatrix';
+import CityMatrix from '../services/CityMatrix';
+import Navigation from '../services/Navigation';
 import contants from '../helpers/contants';
 
 const defaultOptions = {
@@ -31,6 +32,7 @@ class City {
     this.width = width;
     this.height = height;
     this.matrix = new CityMatrix(Math.floor(this.width / this.tileSize));
+    this.navigation = new Navigation(this.matrix);
     this.groundCanvas = document.createElement('canvas');
     this.groundCanvas.width = this.width;
     this.groundCanvas.height = this.height;
@@ -74,12 +76,17 @@ class City {
         const nodes = [];
 
         for(let j = 0; j < this.matrix.size; j++) {
-          nodes.push(axis === 'Col' ? [i, j] : [j, i]);
+          const node = axis === 'Col' ? [i, j] : [j, i];
+          nodes.push(node);
         }
 
         const street = new Street({
           name: `${axis}-${counter}`,
           nodes
+        });
+
+        nodes.forEach((node) => {
+          this.matrix.setTileContent(node[0], node[1], street);
         });
 
         street.drawOnCanvas(ctx);

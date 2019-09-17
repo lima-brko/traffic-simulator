@@ -1,0 +1,68 @@
+import Street from '../components/Street';
+
+class MatrixTile {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.contents = [];
+  }
+
+  hasStreet() {
+    return this.contents.some((content) => content instanceof Street);
+  }
+}
+
+class CityMatrix {
+  constructor(size) {
+    this.size = size;
+    this.matrix = [];
+
+    for(let i = 0; i < this.size; i++) {
+      this.matrix[i] = [];
+      for(let j = 0; j < this.size; j++) {
+        this.matrix[i][j] = new MatrixTile(i, j);
+      }
+    }
+  }
+
+  getTiles() {
+    const tiles = [];
+
+    for(let i = 0; i < this.matrix.length; i++) {
+      for(let j = 0; j < this.matrix[i].length; j++) {
+        tiles.push(this.matrix[i][j]);
+      }
+    }
+
+    return tiles;
+  }
+
+  getTile(x, y) {
+    return this.matrix[x][y];
+  }
+
+  setTileContent(x, y, contentNode) {
+    const hasContent = this.matrix[x][y].contents.some((content) => content === contentNode);
+    if(hasContent) {
+      return;
+    }
+
+    this.matrix[x][y].contents.push(contentNode);
+  }
+
+  clone() {
+    const newMatrix = [];
+
+    for(let i = 0; i < this.matrix.length; i++) {
+      newMatrix[i] = [];
+
+      for(let j = 0; j < this.matrix[i].length; j++) {
+        newMatrix[i][j] = null;
+      }
+    }
+
+    return newMatrix;
+  }
+}
+
+export default CityMatrix;
