@@ -1,4 +1,5 @@
 import {
+  CanvasTexture,
   Color,
   Mesh,
   BoxBufferGeometry,
@@ -8,11 +9,33 @@ import {
 import House from './House';
 import Car from './Car';
 import Street from './Street';
+import CityMatrix from './CityMatrix';
+import contants from '../helpers/contants';
+
+const defaultOptions = {
+  width: 1000,
+  height: 1000
+};
 
 class City {
   constructor() {
+    const {
+      width,
+      height
+    } = defaultOptions;
+
     this.scene = new Scene();
     this.scene.background = new Color(0xfae0cb);
+
+    this.tileSize = contants.tileSize;
+    this.width = width;
+    this.height = height;
+    this.matrix = new CityMatrix(Math.floor(this.width / this.tileSize));
+    this.groundCanvas = document.createElement('canvas');
+    this.groundCanvas.width = this.width;
+    this.groundCanvas.height = this.height;
+
+    this.streets = [];
     this.houses = [
       new House({
         width: 30,
@@ -24,24 +47,63 @@ class City {
     this.cars = [
       new Car()
     ];
-    this.streets = [
-      new Street({x: 0, y: 0.01}),
-      new Street({x: 40, y: 0.01}),
-      new Street({x: 80, y: 0.01}),
-      new Street({x: 120, y: 0.01})
-    ];
 
     this.initilize();
   }
 
-  initilize() {
-    const plane = new Mesh(
-      new BoxBufferGeometry(1000, 20, 1000),
-      new MeshBasicMaterial({color: 0xcac4ae})
-    );
-    plane.position.set(0, -10, 0);
+  drawTilesGrid() {
+    const ctx = this.groundCanvas.getContext('2d');
+    ctx.fillStyle = '#cac4ae';
+    ctx.fillRect(0, 0, this.width, this.height);
 
-    this.scene.add(plane);
+    this.matrix.getTiles().forEach((tile) => {
+      ctx.strokeStyle = '#aea998';
+      ctx.strokeRect(this.tileSize * tile.x, this.tileSize * tile.y, this.tileSize, this.tileSize);
+    });
+  }
+
+  populateStreets() {
+    const ctx = this.groundCanvas.getContext('2d');
+    const axes = ['Row', 'Col'];
+
+    axes.forEach((axis) => {
+      let counter = 0;
+
+      for(let i = 2; i < this.matrix.size; i += 4) {
+        counter++;
+        const nodes = [];
+
+        for(let j = 0; j < this.matrix.size; j++) {
+          nodes.push(axis === 'Col' ? [i, j] : [j, i]);
+        }
+
+        const street = new Street({
+          name: `${axis}-${counter}`,
+          nodes
+        });
+
+        street.drawOnCanvas(ctx);
+        this.streets.push(street);
+      }
+    });
+  }
+
+  initilize() {
+    this.drawTilesGrid();
+    this.populateStreets();
+    const ground = new Mesh(
+      new BoxBufferGeometry(this.width, 20, this.height),
+      [
+        new MeshBasicMaterial({color: 0xcac4ae}),
+        new MeshBasicMaterial({color: 0xcac4ae}),
+        new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)}),
+        new MeshBasicMaterial({color: 0xcac4ae}),
+        new MeshBasicMaterial({color: 0xcac4ae}),
+        new MeshBasicMaterial({color: 0xcac4ae})
+      ]
+    );
+    ground.position.set(0, -10, 0);
+    this.scene.add(ground);
 
     this.houses.forEach((house) => {
       this.scene.add(house.mesh);
@@ -49,10 +111,6 @@ class City {
 
     this.cars.forEach((car) => {
       this.scene.add(car.mesh);
-    });
-
-    this.streets.forEach((street) => {
-      this.scene.add(street.mesh);
     });
   }
 

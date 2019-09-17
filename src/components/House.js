@@ -7,7 +7,7 @@ import {
 
 const windowSize = {
   width: 8,
-  height: 18,
+  height: 13,
   margin: 1
 };
 const houseColors = [
@@ -28,10 +28,10 @@ class House {
     this.mesh = new Mesh(
       new BoxBufferGeometry(props.width, props.depth, props.height),
       [
-        new MeshBasicMaterial({color: 0xcccccc, map: this.createTexture(props.depth, props.height, -90)}),
-        new MeshBasicMaterial({color: 0xcccccc, map: this.createTexture(props.depth, props.height)}),
-        new MeshBasicMaterial({color: 0xcccccc, map: this.createTexture(props.depth, props.height)}),
-        new MeshBasicMaterial({color: 0xcccccc, map: this.createTexture(props.depth, props.height)}),
+        new MeshBasicMaterial({map: this.createTexture(props.depth, props.height, 270)}),
+        new MeshBasicMaterial({map: this.createTexture(props.depth, props.height, 90)}),
+        new MeshBasicMaterial({map: this.createTexture(props.width, props.height, 0)}),
+        new MeshBasicMaterial({map: this.createTexture(props.width, props.height, 0)}),
         new MeshBasicMaterial({color: 0x444444}),
         new MeshBasicMaterial({color: 0x444444})
       ]
@@ -42,15 +42,17 @@ class House {
     this.mesh.rotation.x = -Math.PI / 2;
   }
 
-  createTexture(width, height, rotation) {
+  createTexture(width, height, degree) {
     const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
     const ctx = canvas.getContext('2d');
+    const radians = degree * Math.PI / 180;
 
-    // ctx.translate(width / 2, height / 2);
-    // ctx.rotate(90 * Math.PI / 180);
-    // ctx.translate(-width / 2, -height / 2);
+    canvas.width = width * Math.abs(Math.cos(radians)) + height * Math.abs(Math.sin(radians));
+    canvas.height = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(radians);
+    ctx.translate(-width / 2, -height / 2);
 
     ctx.fillStyle = this.color.wall;
     ctx.fillRect(0, 0, width, height);
@@ -65,16 +67,19 @@ class House {
 
     if(windowsX >= 1 && windowsY >= 1) {
       const windowsTotal = windowsX * windowsY;
+      const windowsTotalWidth = windowsX * windowOuter.width;
+      const windowsTotalHeight = windowsY * windowOuter.height;
+      const initOffsetX = (width - windowsTotalWidth) / 2;
+      const initOffsetY = (height - windowsTotalHeight) / 2;
+
       for(let i = 0; i < windowsTotal; i++) {
-        ctx.fillRect(windowOuter.width * (i % windowsX), windowOuter.height * Math.floor(i / windowsX), 8, 18);
+        const x = (windowOuter.width * (i % windowsX)) + windowSize.margin + initOffsetX;
+        const y = (windowOuter.height * Math.floor(i / windowsX)) + windowSize.margin + initOffsetY;
+        ctx.fillRect(x, y, windowSize.width, windowSize.height);
       }
     }
 
-    const texture = new CanvasTexture(canvas);
-    // if(rotation) {
-    //   texture.mapping =
-    // }
-    return texture;
+    return new CanvasTexture(canvas);
   }
 }
 
