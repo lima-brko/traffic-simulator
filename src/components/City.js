@@ -46,9 +46,7 @@ class City {
         x: 0
       })
     ];
-    this.cars = [
-      new Car()
-    ];
+    this.cars = [];
 
     this.initilize();
   }
@@ -95,6 +93,19 @@ class City {
     });
   }
 
+  populateCars() {
+    const carTotal = 1;
+
+    for(let i = 0; i < carTotal; i++) {
+      const car = new Car();
+      this.scene.add(car.mesh);
+
+      const carRoute = this.navigation.findBestRoute([2, 0], [6, this.matrix.size - 1]);
+      console.log(carRoute);
+      this.cars.push(car);
+    }
+  }
+
   initilize() {
     this.drawTilesGrid();
     this.populateStreets();
@@ -116,9 +127,7 @@ class City {
       this.scene.add(house.mesh);
     });
 
-    this.cars.forEach((car) => {
-      this.scene.add(car.mesh);
-    });
+    this.populateCars();
   }
 
   update() {

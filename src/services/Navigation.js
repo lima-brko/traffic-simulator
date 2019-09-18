@@ -1,7 +1,18 @@
-class Navigation {
+class Location {
   constructor(props) {
-    this.matrix = props.matrix;
-    this.routes = [];
+    this.x = props.x;
+    this.y = props.y;
+    this.path = props.path || [];
+    this.status = 'Unknown';
+  }
+}
+
+class Navigation {
+  constructor(matrix) {
+    this.matrix = matrix;
+    this.fromLocation = null;
+    this.toLocation = null;
+    this.activeStreetMatrix = null;
   }
 
 
@@ -9,23 +20,26 @@ class Navigation {
   // (a location is "valid" if it is on the grid, is not an "obstacle",
   // and has not yet been visited by our algorithm)
   // Returns "Valid", "Invalid", "Blocked", or "Goal"
-  locationStatus(location) {
-    const gridSize = this.matrix.matrix.length;
-    const dft = location.distanceFromTop;
-    const dfl = location.distanceFromLeft;
+  verifyLocationStatus(location) {
+    const {x, y} = location;
 
-    if(location.distanceFromLeft < 0 ||
-        location.distanceFromLeft >= gridSize ||
-        location.distanceFromTop < 0 ||
-        location.distanceFromTop >= gridSize) {
-      // location is not on the grid--return false
+    if(x < 0 ||
+      x >= this.matrix.size ||
+      y < 0 ||
+      y >= this.matrix.size) {
       return 'Invalid';
-    } else if(this.matrix.matrix[dft][dfl] === 'Goal') {
+    }
+
+    const tile = this.activeStreetMatrix[x][y];
+
+    if(x === this.toLocation.x && y === this.toLocation.y) {
       return 'Goal';
-    } else if(this.matrix.matrix[dft][dfl] !== 'Empty') {
-      // location is either an obstacle or has been visited
+    }
+
+    if(!tile.streets.length || tile.isVisited) {
       return 'Blocked';
     }
+
     return 'Valid';
   }
 
@@ -45,65 +59,40 @@ class Navigation {
       x -= 1;
     }
 
-    const newLocation = {
-      y,
-      x,
-      path: newPath,
-      status: 'Unknown'
-    };
-    newLocation.status = this.locationStatus(newLocation);
+    const newLocation = new Location({x, y, path: newPath});
+    newLocation.status = this.verifyLocationStatus(newLocation);
 
     if(newLocation.status === 'Valid') {
-      this.matrix.matrix[newLocation.distanceFromTop][newLocation.distanceFromLeft] = 'Visited';
+      this.activeStreetMatrix[x][y].isVisited = true;
     }
 
     return newLocation;
   }
 
   findBestRoute(fromNode, toNode) {
-    this.activeRoute = this.matrix.clone();
+    const directions = ['North', 'East', 'South', 'West'];
+    const bestRoute = null;
+    this.activeStreetMatrix = this.matrix.getStreetMatrix();
 
-    const startLocation = {
-      x: fromNode[0],
-      y: fromNode[1],
-      path: [],
-      status: 'Start'
-    };
+    this.fromLocation = new Location({x: fromNode[0], y: fromNode[1]});
+    this.toLocation = new Location({x: toNode[0], y: toNode[1]});
 
-    const queue = [startLocation];
+    const queue = [this.fromLocation];
+    this.activeStreetMatrix[this.fromLocation.x][this.fromLocation.y].isVisited = true;
 
-    while(queue.length > 0) {
+    while(queue.length > 0 || bestRoute !== null) {
       const currentLocation = queue.shift();
 
-      const NLocation = this.exploreInDirection(currentLocation, 'North');
-      if(NLocation.status === 'Goal') {
-        return NLocation.path;
-      } else if(NLocation.status === 'Valid') {
-        queue.push(NLocation);
-      }
+      for(let i = 0; i < directions.length; i++) {
+        const location = this.exploreInDirection(currentLocation, directions[i]);
 
-      // Explore East
-      const ELocation = this.exploreInDirection(currentLocation, 'East');
-      if(ELocation.status === 'Goal') {
-        return ELocation.path;
-      } else if(ELocation.status === 'Valid') {
-        queue.push(ELocation);
-      }
+        if(location.status === 'Goal') {
+          return location.path;
+        }
 
-      // Explore South
-      const SLocation = this.exploreInDirection(currentLocation, 'South');
-      if(SLocation.status === 'Goal') {
-        return SLocation.path;
-      } else if(SLocation.status === 'Valid') {
-        queue.push(SLocation);
-      }
-
-      // Explore West
-      const WLocation = this.exploreInDirection(currentLocation, 'West');
-      if(WLocation.status === 'Goal') {
-        return WLocation.path;
-      } else if(WLocation.status === 'Valid') {
-        queue.push(WLocation);
+        if(location.status === 'Valid') {
+          queue.push(location);
+        }
       }
     }
 

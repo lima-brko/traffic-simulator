@@ -7,8 +7,8 @@ class MatrixTile {
     this.contents = [];
   }
 
-  hasStreet() {
-    return this.contents.some((content) => content instanceof Street);
+  getStreetContents() {
+    return this.contents.filter((content) => content instanceof Street);
   }
 }
 
@@ -50,14 +50,15 @@ class CityMatrix {
     this.matrix[x][y].contents.push(contentNode);
   }
 
-  clone() {
+  getStreetMatrix() {
     const newMatrix = [];
 
     for(let i = 0; i < this.matrix.length; i++) {
       newMatrix[i] = [];
 
       for(let j = 0; j < this.matrix[i].length; j++) {
-        newMatrix[i][j] = null;
+        const streetContents = this.matrix[i][j].getStreetContents();
+        newMatrix[i][j] = {streets: streetContents};
       }
     }
 
