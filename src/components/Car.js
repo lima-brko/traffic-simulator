@@ -5,6 +5,7 @@ import {
   BoxBufferGeometry,
   CanvasTexture
 } from 'three';
+import Navigation from '../services/Navigation';
 
 function createCabinTexture(width, height, rects) {
   const canvas = document.createElement('canvas');
@@ -88,6 +89,11 @@ class Car {
     this.mesh = carGroup;
     this.mesh.position.set(0, 0, 0);
     this.mesh.rotation.x = -Math.PI / 2;
+    this.navigation = Navigation;
+  }
+
+  setRoute(fromNode, toNode) {
+    this.route = this.navigation.findBestRoute(fromNode, toNode);
   }
 
   update() {

@@ -1,3 +1,5 @@
+import WorldMatrix from './WorldMatrix';
+
 class Location {
   constructor(props) {
     this.x = props.x;
@@ -8,18 +10,13 @@ class Location {
 }
 
 class Navigation {
-  constructor(matrix) {
-    this.matrix = matrix;
+  constructor() {
+    this.matrix = WorldMatrix;
     this.fromLocation = null;
     this.toLocation = null;
     this.activeStreetMatrix = null;
   }
 
-
-  // This function will check a location's status
-  // (a location is "valid" if it is on the grid, is not an "obstacle",
-  // and has not yet been visited by our algorithm)
-  // Returns "Valid", "Invalid", "Blocked", or "Goal"
   verifyLocationStatus(location) {
     const {x, y} = location;
 
@@ -44,10 +41,10 @@ class Navigation {
   }
 
   exploreInDirection(currentLocation, direction) {
-    const newPath = currentLocation.path.slice();
-    newPath.push(direction);
-
     let {y, x} = currentLocation;
+
+    const newPath = currentLocation.path.slice();
+    newPath.push(this.matrix.getTile(x, y));
 
     if(direction === 'North') {
       y -= 1;
@@ -69,13 +66,13 @@ class Navigation {
     return newLocation;
   }
 
-  findBestRoute(fromNode, toNode) {
+  findBestRoute(fromTile, toTile) {
     const directions = ['North', 'East', 'South', 'West'];
     const bestRoute = null;
     this.activeStreetMatrix = this.matrix.getStreetMatrix();
 
-    this.fromLocation = new Location({x: fromNode[0], y: fromNode[1]});
-    this.toLocation = new Location({x: toNode[0], y: toNode[1]});
+    this.fromLocation = new Location({x: fromTile.x, y: fromTile.y});
+    this.toLocation = new Location({x: toTile.x, y: toTile.y});
 
     const queue = [this.fromLocation];
     this.activeStreetMatrix[this.fromLocation.x][this.fromLocation.y].isVisited = true;
@@ -100,4 +97,4 @@ class Navigation {
   }
 }
 
-export default Navigation;
+export default new Navigation();

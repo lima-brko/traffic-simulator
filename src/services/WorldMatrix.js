@@ -1,5 +1,7 @@
 import Street from '../components/Street';
 
+const matrixSize = 25;
+
 class MatrixTile {
   constructor(x, y) {
     this.x = x;
@@ -13,8 +15,8 @@ class MatrixTile {
 }
 
 class CityMatrix {
-  constructor(size) {
-    this.size = size;
+  constructor() {
+    this.size = matrixSize;
     this.matrix = [];
 
     for(let i = 0; i < this.size; i++) {
@@ -66,4 +68,4 @@ class CityMatrix {
   }
 }
 
-export default CityMatrix;
+export default new CityMatrix();

@@ -9,8 +9,7 @@ import {
 import House from './House';
 import Car from './Car';
 import Street from './Street';
-import CityMatrix from '../services/CityMatrix';
-import Navigation from '../services/Navigation';
+import WorldMatrix from '../services/WorldMatrix';
 import contants from '../helpers/contants';
 
 const defaultOptions = {
@@ -18,7 +17,7 @@ const defaultOptions = {
   height: 1000
 };
 
-class City {
+class DarwinCity {
   constructor() {
     const {
       width,
@@ -31,8 +30,7 @@ class City {
     this.tileSize = contants.tileSize;
     this.width = width;
     this.height = height;
-    this.matrix = new CityMatrix(Math.floor(this.width / this.tileSize));
-    this.navigation = new Navigation(this.matrix);
+    this.matrix = WorldMatrix;
     this.groundCanvas = document.createElement('canvas');
     this.groundCanvas.width = this.width;
     this.groundCanvas.height = this.height;
@@ -99,9 +97,7 @@ class City {
     for(let i = 0; i < carTotal; i++) {
       const car = new Car();
       this.scene.add(car.mesh);
-
-      const carRoute = this.navigation.findBestRoute([2, 0], [6, this.matrix.size - 1]);
-      console.log(carRoute);
+      car.setRoute(this.matrix.getTile(2, 0), this.matrix.getTile(6, this.matrix.size - 1));
       this.cars.push(car);
     }
   }
@@ -137,4 +133,4 @@ class City {
   }
 }
 
-export default City;
+export default DarwinCity;
