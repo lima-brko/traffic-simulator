@@ -1,7 +1,9 @@
 import {
   CanvasTexture,
+  CylinderBufferGeometry,
   Color,
   Mesh,
+  Group,
   BoxBufferGeometry,
   MeshBasicMaterial,
   Scene
@@ -41,7 +43,7 @@ class DarwinCity {
         width: 30,
         height: 101,
         depth: 20,
-        x: 0
+        x: 150
       })
     ];
     this.cars = [];
@@ -91,20 +93,64 @@ class DarwinCity {
     });
   }
 
+  createCarRouteTrace(car) {
+    const routeTrace = new Group();
+    const material = new MeshBasicMaterial({color: 0xffff00, opacity: 0.5, transparent: true});
+
+    const routePoints = car.route.map((tile) => ({
+      x: (tile.x * this.tileSize) + (this.tileSize / 2),
+      y: (tile.y * this.tileSize) + (this.tileSize / 2)
+    }));
+
+    routePoints.forEach((point, idx) => {
+      // const isFirst = idx === 0;
+      // const isLast = idx === car.route.length - 1;
+
+      // if(!isFirst) {
+      // const prevPoint = car.route[idx - 1];
+
+      const entryGeometry = new CylinderBufferGeometry(1, 1, this.tileSize, 10);
+      const entryMesh = new Mesh(entryGeometry, material);
+      entryMesh.position.set(point.x, point.y, 5);
+
+      // entryMesh.rotation.x = -Math.PI / 2;
+      routeTrace.add(entryMesh);
+      // }
+
+      // if(!isLast) {
+      //   const exitGeometry = new CylinderBufferGeometry(1, 1, this.tileSize, 10);
+      //   const exitMesh = new Mesh(exitGeometry, material);
+      //   exitMesh.position.set(x, y + 50, 5);
+      //   exitMesh.rotation.z = 0 * Math.PI / 180;
+      //   routeTrace.add(exitMesh);
+      // }
+    });
+
+    routeTrace.rotation.x = 90 * Math.PI / 180;
+    routeTrace.position.set(-100, 0, 10);
+    this.scene.add(routeTrace);
+  }
+
   populateCars() {
     const carTotal = 1;
 
     for(let i = 0; i < carTotal; i++) {
       const car = new Car();
-      this.scene.add(car.mesh);
       car.setRoute(this.matrix.getTile(2, 0), this.matrix.getTile(6, this.matrix.size - 1));
+      this.createCarRouteTrace(car);
+
+      this.scene.add(car.mesh);
       this.cars.push(car);
     }
   }
 
-  initilize() {
-    this.drawTilesGrid();
-    this.populateStreets();
+  populateBuildings() {
+    this.houses.forEach((house) => {
+      this.scene.add(house.mesh);
+    });
+  }
+
+  createGround() {
     const ground = new Mesh(
       new BoxBufferGeometry(this.width, 20, this.height),
       [
@@ -118,12 +164,29 @@ class DarwinCity {
     );
     ground.position.set(0, -10, 0);
     this.scene.add(ground);
+  }
 
-    this.houses.forEach((house) => {
-      this.scene.add(house.mesh);
-    });
-
+  initilize() {
+    this.drawTilesGrid();
+    this.populateStreets();
+    this.populateBuildings();
     this.populateCars();
+    this.createGround();
+
+    // Center Reference
+    const referenceY = new Mesh(
+      new BoxBufferGeometry(5, 125, 5),
+      new MeshBasicMaterial({color: 0xff0000}),
+    );
+    referenceY.rotation.x = -Math.PI / 2;
+    this.scene.add(referenceY);
+
+    const referenceX = new Mesh(
+      new BoxBufferGeometry(125, 5, 5),
+      new MeshBasicMaterial({color: 0xff0000}),
+    );
+    referenceX.rotation.x = -Math.PI / 2;
+    this.scene.add(referenceX);
   }
 
   update() {
