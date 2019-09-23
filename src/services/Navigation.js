@@ -59,6 +59,10 @@ class Navigation {
     const newLocation = new Location({x, y, path: newPath});
     newLocation.status = this.verifyLocationStatus(newLocation);
 
+    if(newLocation.status === 'Goal') {
+      newLocation.path.push(this.matrix.getTile(x, y));
+    }
+
     if(newLocation.status === 'Valid') {
       this.activeStreetMatrix[x][y].isVisited = true;
     }

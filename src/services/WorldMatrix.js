@@ -1,12 +1,16 @@
+import contants from '../helpers/contants';
 import Street from '../components/Street';
 
 const matrixSize = 25;
+const {worldWidth, worldHeight, tileSize} = contants;
 
 class MatrixTile {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.contents = [];
+    this.sceneX = (worldWidth / 2 * -1) + (x * tileSize);
+    this.sceneY = (worldHeight / 2 * -1) + (y * tileSize);
   }
 
   getStreetContents() {

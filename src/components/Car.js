@@ -6,6 +6,7 @@ import {
   CanvasTexture
 } from 'three';
 import Navigation from '../services/Navigation';
+import constants from '../helpers/contants';
 // import CarSensor from './CarSensor';
 
 function createCabinTexture(width, height, rects) {
@@ -56,9 +57,14 @@ const carLeftSideTexture = createCabinTexture(40, 110, [
 ]);
 
 class Car {
-  constructor() {
+  constructor(props) {
+    const {
+      position,
+      rotation
+    } = props;
+
     this.mesh = Car.create3dModel();
-    this.mesh.position.set(0, 0, 0);
+    this.mesh.position.set(position.x * constants.tileSize, 0, 0);
     this.mesh.rotation.x = -Math.PI / 2;
 
     this.navigation = Navigation;
