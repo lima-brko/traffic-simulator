@@ -15,16 +15,17 @@ import House from './House';
 import Car from './Car';
 import Street from './Street';
 import WorldMatrix from '../services/WorldMatrix';
-import contants from '../helpers/contants';
+import constants from '../helpers/constants';
+import utils from '../helpers/utils';
 
 class DarwinCity {
   constructor() {
     this.scene = new Scene();
     this.scene.background = new Color(0xfae0cb);
 
-    this.tileSize = contants.tileSize;
-    this.width = contants.worldWidth;
-    this.height = contants.worldHeight;
+    this.tileSize = constants.tileSize;
+    this.width = constants.worldWidth;
+    this.height = constants.worldHeight;
     this.matrix = WorldMatrix;
     this.groundCanvas = document.createElement('canvas');
     this.groundCanvas.width = this.width;
@@ -64,20 +65,20 @@ class DarwinCity {
 
       for(let i = 2; i < this.matrix.size; i += 4) {
         counter++;
-        const nodes = [];
+        const tiles = [];
 
         for(let j = 0; j < this.matrix.size; j++) {
-          const node = axis === 'Col' ? [i, j] : [j, i];
-          nodes.push(node);
+          const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
+          tiles.push(tile);
         }
 
         const street = new Street({
           name: `${axis}-${counter}`,
-          nodes
+          tiles
         });
 
-        nodes.forEach((node) => {
-          this.matrix.setTileContent(node[0], node[1], street);
+        tiles.forEach((tile) => {
+          this.matrix.setTileContent(tile.x, tile.y, street);
         });
 
         street.drawOnCanvas(ctx);
@@ -93,24 +94,25 @@ class DarwinCity {
     });
 
     car.route.forEach((point) => {
-      geometry.vertices.push(new Vector3(point.sceneX, point.sceneY, 0));
+      geometry.vertices.push(new Vector3(point.sceneX, point.sceneY, -5));
     });
 
     const routeTrace = new Line(geometry, material);
     routeTrace.rotation.x = 90 * Math.PI / 180;
-    // routeTrace.position.set(-(this.width / 2), 10, -(this.height / 2));
     this.scene.add(routeTrace);
   }
 
   populateCars() {
-    const carTotal = 1;
+    const carTotal = 10;
 
     for(let i = 0; i < carTotal; i++) {
-      const fromTile = this.matrix.getTile(2, 0);
-      const toTile = this.matrix.getTile(6, this.matrix.size - 1);
+      const fromStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
+      const toStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
+      const fromTile = fromStreet.tiles[utils.getRandomInt(0, 2) === 0 ? 0 : fromStreet.tiles.length - 1];
+      const toTile = toStreet.tiles[utils.getRandomInt(0, 2) === 0 ? 0 : fromStreet.tiles.length - 1];
       const car = new Car({
         position: fromTile,
-        rotation: 180
+        angle: 180
       });
       car.setRoute(fromTile, toTile);
       this.createCarRouteTrace(car);

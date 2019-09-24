@@ -1,31 +1,16 @@
-import {
-  DoubleSide,
-  PlaneGeometry,
-  MeshBasicMaterial,
-  Mesh
-} from 'three';
-import contants from '../helpers/contants';
+import contants from '../helpers/constants';
 
 class Street {
   constructor(props) {
     this.name = props.name;
-    this.nodes = props.nodes;
+    this.tiles = props.tiles;
     this.tileSize = contants.tileSize;
-
-    // const plane = new Mesh(
-    //   new PlaneGeometry(20, 1000),
-    //   new MeshBasicMaterial({color: 0x989899, side: DoubleSide})
-    // );
-    // plane.position.set(props.x, props.y, 0);
-    // plane.rotation.x = -Math.PI / 2;
-
-    // this.mesh = plane;
   }
 
   drawOnCanvas(ctx) {
-    this.nodes.forEach((node, i) => {
-      const x = this.tileSize * node[0];
-      const y = this.tileSize * node[1];
+    this.tiles.forEach((tile, i) => {
+      const x = this.tileSize * tile.x;
+      const y = this.tileSize * tile.y;
 
       ctx.fillStyle = '#989899';
       ctx.fillRect(x, y, this.tileSize, this.tileSize);
