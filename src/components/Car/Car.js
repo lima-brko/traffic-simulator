@@ -15,7 +15,8 @@ class Car {
       y: 0
     };
     this.handleAngle = 0;
-    this.mesh = CarModel.create3dModel();
+    this.color = utils.getRandomColor();
+    this.mesh = CarModel.create3dModel(this.color);
     this.mesh.rotation.x = -Math.PI / 2;
 
     this.setPosition(position.sceneX, position.sceneY);
@@ -28,6 +29,9 @@ class Car {
     this.brakePower = 0.1;
     this.accelerationPower = 0.1;
     this.maxVelocity = 0.5;
+    this.callbacks = {
+      onArrival: () => {}
+    };
 
     // this.sensors = {
     //   front: new CarSensor(this.mesh.position, 0)
@@ -76,9 +80,20 @@ class Car {
     this.setPosition(newX, newY);
   }
 
-  setRoute(fromTile, toTile) {
-    this.route = this.navigation.findBestRoute(fromTile, toTile);
+  setRoute(fromTile, toTile, callbacks) {
+    const routeTiles = this.navigation.findBestRoute(fromTile, toTile);
+    this.route = routeTiles.map((tile, idx) => {
+      const deltaX = utils.roundNumber(targetTile.sceneX - x, 1);
+      const deltaY = utils.roundNumber((targetTile.sceneY - y) * -1, 1);
+
+      return {
+        tile,
+        sceneX: 0,
+        sceneY: 0
+      };
+    });
     this.currentRouteTile = 0;
+    this.callbacks.onArrival = callbacks.onArrival;
   }
 
   accelerate() {
@@ -110,6 +125,7 @@ class Car {
       this.currentRouteTile++;
     } else {
       this.currentRouteTile = null;
+      this.callbacks.onArrival(this);
     }
   }
 

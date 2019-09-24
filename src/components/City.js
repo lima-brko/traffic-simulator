@@ -90,35 +90,50 @@ class DarwinCity {
   createCarRouteTrace(car) {
     const geometry = new Geometry();
     const material = new LineBasicMaterial({
-      color: 0xffff00
+      color: car.color
     });
 
     car.route.forEach((point) => {
       geometry.vertices.push(new Vector3(point.sceneX, point.sceneY, -5));
     });
 
-    const routeTrace = new Line(geometry, material);
-    routeTrace.rotation.x = 90 * Math.PI / 180;
-    this.scene.add(routeTrace);
+    car.routeTrace = new Line(geometry, material);
+    car.routeTrace.rotation.x = 90 * Math.PI / 180;
+    this.scene.add(car.routeTrace);
+  }
+
+  onCarArrival(car) {
+    const index = this.cars.findIndex((tmpCar) => tmpCar === car);
+    this.cars.splice(index, 1);
+    this.scene.remove(car.mesh);
+    this.scene.remove(car.routeTrace);
+    this.createRandomCar();
+  }
+
+  createRandomCar() {
+    const startDirection = utils.getRandomInt(0, 2) === 0 ? 0 : 1;
+    const fromStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
+    const toStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
+    // const fromTile = fromStreet.tiles[startDirection ? 0 : fromStreet.tiles.length - 1];
+    const fromTile = this.matrix.getTile(2, 0);
+    // const toTile = toStreet.tiles[!startDirection ? 0 : fromStreet.tiles.length - 1];
+    const toTile = this.matrix.getTile(6, 24);
+    const car = new Car({
+      position: fromTile,
+      angle: 180
+    });
+    car.setRoute(fromTile, toTile, {onArrival: this.onCarArrival.bind(this)});
+    this.createCarRouteTrace(car);
+
+    this.scene.add(car.mesh);
+    this.cars.push(car);
   }
 
   populateCars() {
-    const carTotal = 10;
+    const carTotal = 1;
 
     for(let i = 0; i < carTotal; i++) {
-      const fromStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
-      const toStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
-      const fromTile = fromStreet.tiles[utils.getRandomInt(0, 2) === 0 ? 0 : fromStreet.tiles.length - 1];
-      const toTile = toStreet.tiles[utils.getRandomInt(0, 2) === 0 ? 0 : fromStreet.tiles.length - 1];
-      const car = new Car({
-        position: fromTile,
-        angle: 180
-      });
-      car.setRoute(fromTile, toTile);
-      this.createCarRouteTrace(car);
-
-      this.scene.add(car.mesh);
-      this.cars.push(car);
+      this.createRandomCar();
     }
   }
 

@@ -1,5 +1,5 @@
 export default {
-  tileSize: 40,
-  worldWidth: 1000,
-  worldHeight: 1000
+  tileSize: 50,
+  worldWidth: 1250,
+  worldHeight: 1250
 };

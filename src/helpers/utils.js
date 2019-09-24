@@ -28,6 +28,23 @@ const utils = {
     const minCeil = Math.ceil(min);
     const maxFloor = Math.floor(max);
     return Math.floor(Math.random() * (maxFloor - minCeil)) + minCeil;
+  },
+  getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for(let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  },
+  pullPointReferenceToLineWithAngle(x1, x2, y1, y2, angle) {
+    const deltaY = y2 - y1;
+    const deltaX = x2 - x1;
+    const angleBetween = Math.atan2(deltaY, deltaX);
+    const distance = Math.hypot(x2 - x1, y2 - y1);
+    const x = x2 + (distance * Math.cos(angleBetween + angle));
+    const y = y2 + (distance * Math.sin(angleBetween + angle));
+    return [x, y];
   }
 };
 

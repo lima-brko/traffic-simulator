@@ -3,12 +3,14 @@ import contants from '../helpers/constants';
 class Street {
   constructor(props) {
     this.name = props.name;
-    this.tiles = props.tiles;
+    this.sections = props.tiles.map((tile) => ({
+      tile
+    }));
     this.tileSize = contants.tileSize;
   }
 
   drawOnCanvas(ctx) {
-    this.tiles.forEach((tile, i) => {
+    this.sections.forEach(({tile}, i) => {
       const x = this.tileSize * tile.x;
       const y = this.tileSize * tile.y;
 

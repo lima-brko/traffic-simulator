@@ -29,7 +29,6 @@ function createWheel() {
   return wheel;
 }
 
-const vechicleColors = [0xa52523, 0xbdb638, 0x78b14b];
 const carFrontTexture = createCabinTexture(80, 40, [{
   x: 10, y: 0, w: 60, h: 30
 }]);
@@ -53,11 +52,10 @@ const carLeftSideTexture = createCabinTexture(40, 110, [
   }
 ]);
 
-function create3dModel() {
+function create3dModel(color) {
   const carGroup = new Group();
 
   // Car Chassis
-  const color = vechicleColors[Math.floor(Math.random() * vechicleColors.length)];
   const main = new Mesh(
     new BoxBufferGeometry(14, 30, 7),
     new MeshBasicMaterial({color, flatShading: true})
