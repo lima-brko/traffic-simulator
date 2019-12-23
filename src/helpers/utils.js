@@ -45,6 +45,15 @@ const utils = {
     const x = x2 + (distance * Math.cos(angleBetween + angle));
     const y = y2 + (distance * Math.sin(angleBetween + angle));
     return [x, y];
+  },
+  loadImage(url, callback) {
+    const image = new Image();
+
+    image.onload = function() {
+      callback(image);
+    };
+
+    image.src = url;
   }
 };
 

@@ -13,7 +13,7 @@ import {
 
 import House from './House';
 import Car from './Car';
-import Street from './Street';
+import Road from './Road';
 import WorldMatrix from '../services/WorldMatrix';
 import constants from '../helpers/constants';
 import utils from '../helpers/utils';
@@ -31,7 +31,7 @@ class DarwinCity {
     this.groundCanvas.width = this.width;
     this.groundCanvas.height = this.height;
 
-    this.streets = [];
+    this.roads = [];
     this.houses = [
       new House({
         width: 30,
@@ -56,35 +56,37 @@ class DarwinCity {
     });
   }
 
-  populateStreets() {
+  populateRoads() {
     const ctx = this.groundCanvas.getContext('2d');
-    const axes = ['Row', 'Col'];
+    // const axes = ['Row', 'Col'];
 
-    axes.forEach((axis) => {
-      let counter = 0;
-
-      for(let i = 2; i < this.matrix.size; i += 4) {
-        counter++;
-        const tiles = [];
-
-        for(let j = 0; j < this.matrix.size; j++) {
-          const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
-          tiles.push(tile);
-        }
-
-        const street = new Street({
-          name: `${axis}-${counter}`,
-          tiles
-        });
-
-        tiles.forEach((tile) => {
-          this.matrix.setTileContent(tile.x, tile.y, street);
-        });
-
-        street.drawOnCanvas(ctx);
-        this.streets.push(street);
-      }
+    constants.roads.forEach((roadData) => {
+      const road = new Road({
+        name: roadData.name,
+        ways: roadData.ways
+      });
+      road.drawOnCanvas(ctx);
+      this.roads.push(road);
     });
+
+    // axes.forEach((axis) => {
+    //   let counter = 0;
+
+    //   for(let i = 2; i < this.matrix.size; i += 4) {
+    //     counter++;
+    //     const tiles = [];
+
+    //     for(let j = 0; j < this.matrix.size; j++) {
+    //       const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
+    //       tiles.push(tile);
+    //     }
+
+
+    //     tiles.forEach((tile) => {
+    //       this.matrix.setTileContent(tile.x, tile.y, road);
+    //     });
+    //   }
+    // });
   }
 
   createCarRouteTrace(car) {
@@ -112,18 +114,18 @@ class DarwinCity {
 
   createRandomCar() {
     const startDirection = utils.getRandomInt(0, 2) === 0 ? 0 : 1;
-    const fromStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
-    const toStreet = this.streets[utils.getRandomInt(0, this.streets.length)];
-    // const fromTile = fromStreet.tiles[startDirection ? 0 : fromStreet.tiles.length - 1];
+    const fromRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
+    const toRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
+    // const fromTile = fromRoad.tiles[startDirection ? 0 : fromRoad.tiles.length - 1];
     const fromTile = this.matrix.getTile(2, 0);
-    // const toTile = toStreet.tiles[!startDirection ? 0 : fromStreet.tiles.length - 1];
+    // const toTile = toRoad.tiles[!startDirection ? 0 : fromRoad.tiles.length - 1];
     const toTile = this.matrix.getTile(6, 24);
     const car = new Car({
       position: fromTile,
       angle: 180
     });
-    car.setRoute(fromTile, toTile, {onArrival: this.onCarArrival.bind(this)});
-    this.createCarRouteTrace(car);
+    // car.setRoute(fromTile, toTile, {onArrival: this.onCarArrival.bind(this)});
+    // this.createCarRouteTrace(car);
 
     this.scene.add(car.mesh);
     this.cars.push(car);
@@ -149,7 +151,7 @@ class DarwinCity {
       [
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
-        new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)}),
+        new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae})
@@ -157,11 +159,19 @@ class DarwinCity {
     );
     ground.position.set(0, -10, 0);
     this.scene.add(ground);
+
+    const ctx = this.groundCanvas.getContext('2d');
+    utils.loadImage('/bg.png', (imageEl) => {
+      ctx.drawImage(imageEl, 0, 0);
+      ground.needUpdate = true;
+      ground.material[2] = new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)});
+      this.roads.forEach((road) => road.drawOnCanvas(ctx));
+    });
   }
 
   initilize() {
     this.drawTilesGrid();
-    this.populateStreets();
+    this.populateRoads();
     this.populateBuildings();
     this.populateCars();
     this.createGround();

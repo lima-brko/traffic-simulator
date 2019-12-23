@@ -14,7 +14,7 @@ class Navigation {
     this.matrix = WorldMatrix;
     this.fromLocation = null;
     this.toLocation = null;
-    this.activeStreetMatrix = null;
+    this.activeRoadMatrix = null;
   }
 
   verifyLocationStatus(location) {
@@ -27,13 +27,13 @@ class Navigation {
       return 'Invalid';
     }
 
-    const tile = this.activeStreetMatrix[x][y];
+    const tile = this.activeRoadMatrix[x][y];
 
     if(x === this.toLocation.x && y === this.toLocation.y) {
       return 'Goal';
     }
 
-    if(!tile.streets.length || tile.isVisited) {
+    if(!tile.roads.length || tile.isVisited) {
       return 'Blocked';
     }
 
@@ -64,7 +64,7 @@ class Navigation {
     }
 
     if(newLocation.status === 'Valid') {
-      this.activeStreetMatrix[x][y].isVisited = true;
+      this.activeRoadMatrix[x][y].isVisited = true;
     }
 
     return newLocation;
@@ -73,13 +73,13 @@ class Navigation {
   findBestRoute(fromTile, toTile) {
     const directions = ['North', 'East', 'South', 'West'];
     const bestRoute = null;
-    this.activeStreetMatrix = this.matrix.getStreetMatrix();
+    this.activeRoadMatrix = this.matrix.getRoadMatrix();
 
     this.fromLocation = new Location({x: fromTile.x, y: fromTile.y});
     this.toLocation = new Location({x: toTile.x, y: toTile.y});
 
     const queue = [this.fromLocation];
-    this.activeStreetMatrix[this.fromLocation.x][this.fromLocation.y].isVisited = true;
+    this.activeRoadMatrix[this.fromLocation.x][this.fromLocation.y].isVisited = true;
 
     while(queue.length > 0 || bestRoute !== null) {
       const currentLocation = queue.shift();

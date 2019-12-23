@@ -6,10 +6,11 @@ const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const devMode = process.env.NODE_ENV === 'development';
 
 const config = {
-  mode: 'development',
+  mode: devMode ? 'development' : 'production',
   entry: {
     app: path.join(__dirname, 'src/app')
   },
+  devtool: devMode ? 'cheap-module-source-map' : false,
   output: {
     filename: devMode ? '[name].bundle.js' : '[name].[hash].bundle.js'
   },
@@ -26,7 +27,7 @@ const config = {
           {
             loader: MiniCssExtractPlugin.loader,
             options: {
-              hmr: process.env.NODE_ENV === 'development'
+              hmr: devMode
             }
           },
           'css-loader',
@@ -59,7 +60,7 @@ const config = {
     })
   ],
   devServer: {
-    contentBase: path.join(__dirname, 'dist'),
+    contentBase: path.join(__dirname, 'static'),
     compress: true,
     port: 3000
   }

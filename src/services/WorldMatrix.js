@@ -1,5 +1,5 @@
 import contants from '../helpers/constants';
-import Street from '../components/Street';
+import Road from '../components/Road';
 
 const matrixSize = 25;
 const {worldWidth, worldHeight, tileSize} = contants;
@@ -13,8 +13,8 @@ class MatrixTile {
     this.sceneY = (worldHeight / 2 * -1) + (y * tileSize) + (tileSize / 2);
   }
 
-  getStreetContents() {
-    return this.contents.filter((content) => content instanceof Street);
+  getRoadContents() {
+    return this.contents.filter((content) => content instanceof Road);
   }
 }
 
@@ -56,15 +56,15 @@ class CityMatrix {
     this.matrix[x][y].contents.push(contentNode);
   }
 
-  getStreetMatrix() {
+  getRoadMatrix() {
     const newMatrix = [];
 
     for(let i = 0; i < this.matrix.length; i++) {
       newMatrix[i] = [];
 
       for(let j = 0; j < this.matrix[i].length; j++) {
-        const streetContents = this.matrix[i][j].getStreetContents();
-        newMatrix[i][j] = {streets: streetContents};
+        const roadContents = this.matrix[i][j].getRoadContents();
+        newMatrix[i][j] = {roads: roadContents};
       }
     }
 

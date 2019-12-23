@@ -42,10 +42,10 @@ class House {
     this.mesh.rotation.x = -Math.PI / 2;
   }
 
-  createTexture(width, height, degree) {
+  createTexture(width, height, angle) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const radians = degree * Math.PI / 180;
+    const radians = angle * Math.PI / 180;
 
     canvas.width = width * Math.abs(Math.cos(radians)) + height * Math.abs(Math.sin(radians));
     canvas.height = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));
