@@ -58,35 +58,42 @@ class DarwinCity {
 
   populateRoads() {
     const ctx = this.groundCanvas.getContext('2d');
-    // const axes = ['Row', 'Col'];
+    const axes = ['Row', 'Col'];
 
-    constants.roads.forEach((roadData) => {
-      const road = new Road({
-        name: roadData.name,
-        ways: roadData.ways
-      });
-      road.drawOnCanvas(ctx);
-      this.roads.push(road);
-    });
-
-    // axes.forEach((axis) => {
-    //   let counter = 0;
-
-    //   for(let i = 2; i < this.matrix.size; i += 4) {
-    //     counter++;
-    //     const tiles = [];
-
-    //     for(let j = 0; j < this.matrix.size; j++) {
-    //       const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
-    //       tiles.push(tile);
-    //     }
-
-
-    //     tiles.forEach((tile) => {
-    //       this.matrix.setTileContent(tile.x, tile.y, road);
-    //     });
-    //   }
+    // constants.roads.forEach((roadData) => {
+    //   const road = new Road({
+    //     name: roadData.name,
+    //     ways: roadData.ways
+    //   });
+    //   road.drawOnCanvas(ctx);
+    //   this.roads.push(road);
     // });
+
+    axes.forEach((axis) => {
+      let counter = 0;
+
+      for(let i = 8; i < this.matrix.size; i += 59) {
+        counter++;
+        const tiles = [];
+
+        for(let j = 0; j < this.matrix.size; j++) {
+          const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
+          tiles.push(tile);
+        }
+
+        const road = new Road({
+          name: `${axis}-${counter}`,
+          tiles
+        });
+
+        tiles.forEach((tile) => {
+          this.matrix.setTileContent(tile.x, tile.y, road);
+        });
+
+        road.drawOnCanvas(ctx);
+        this.roads.push(road);
+      }
+    });
   }
 
   createCarRouteTrace(car) {
@@ -151,7 +158,8 @@ class DarwinCity {
       [
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
-        new MeshBasicMaterial({color: 0xcac4ae}),
+        new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)}),
+        // new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae}),
         new MeshBasicMaterial({color: 0xcac4ae})
@@ -160,13 +168,13 @@ class DarwinCity {
     ground.position.set(0, -10, 0);
     this.scene.add(ground);
 
-    const ctx = this.groundCanvas.getContext('2d');
-    utils.loadImage('/bg.png', (imageEl) => {
-      ctx.drawImage(imageEl, 0, 0);
-      ground.needUpdate = true;
-      ground.material[2] = new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)});
-      this.roads.forEach((road) => road.drawOnCanvas(ctx));
-    });
+    // const ctx = this.groundCanvas.getContext('2d');
+    // utils.loadImage('/bg.png', (imageEl) => {
+    //   ctx.drawImage(imageEl, 0, 0);
+    //   ground.needUpdate = true;
+    //   ground.material[2] = new MeshBasicMaterial({map: new CanvasTexture(this.groundCanvas)});
+    //   this.roads.forEach((road) => road.drawOnCanvas(ctx));
+    // });
   }
 
   initilize() {
