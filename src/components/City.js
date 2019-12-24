@@ -53,6 +53,13 @@ class DarwinCity {
     this.matrix.getTiles().forEach((tile) => {
       ctx.strokeStyle = '#aea998';
       ctx.strokeRect(this.tileSize * tile.x, this.tileSize * tile.y, this.tileSize, this.tileSize);
+
+      // Texts
+      // ctx.textAlign = 'left';
+      // ctx.font = '11px Verdana';
+      // ctx.fillStyle = '#000';
+      // ctx.fillText(`${this.tileSize * tile.x}-${this.tileSize * tile.y}`, this.tileSize * tile.x, this.tileSize * tile.y + 10);
+      // ctx.resetTransform();
     });
   }
 
@@ -91,6 +98,9 @@ class DarwinCity {
         });
 
         road.drawOnCanvas(ctx);
+        this.roads.forEach((road2) => {
+          Road.createRoadsJunctions(road, road2);
+        });
         this.roads.push(road);
       }
     });
