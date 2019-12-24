@@ -15,6 +15,10 @@ class RoadPath {
     this.way = props.way;
     this.points = props.points;
     this.road = props.road;
+
+    this.points.forEach((point) => {
+      point.roadPath = this;
+    });
   }
 
   getPointInsideTile(tile) {
@@ -31,7 +35,7 @@ class RoadPath {
     return null;
   }
 
-  getPointPrevious(point) {
+  getPointPreviousPoint(point) {
     let prevPoint;
 
     for(let i = 0; i < this.points.length; i++) {

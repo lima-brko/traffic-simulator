@@ -26,7 +26,10 @@ class Road {
       props.tiles.forEach((tile, i) => {
         const pointX = tile.sceneX + Math.sin(utils.angleToRadians(angle)) * (this.tileSize / 4);
         const pointY = tile.sceneY + Math.cos(utils.angleToRadians(angle)) * (this.tileSize / 4);
-        point = new RoadPoint(pointX, pointY);
+        point = new RoadPoint({
+          x: pointX,
+          y: pointY
+        });
 
         if(i !== 0) {
           points[points.length - 1].edges.push(point);
@@ -35,12 +38,13 @@ class Road {
         points.push(point);
       });
 
-      this.ways[way].push(new RoadPath({
+      const roadPath = new RoadPath({
         name: `${this.name}-${way}`,
         way,
         points,
         road: this
-      }));
+      });
+      this.ways[way].push(roadPath);
 
       if(way === 'odd') {
         props.tiles.reverse();
@@ -59,9 +63,14 @@ class Road {
   static createJunctionOnTile(Road1, Road2, tile) {
     ['even', 'odd'].forEach((way) => {
       const roadPath = Road1.ways[way][0];
-      const newPoint = new RoadPoint();
       const point = roadPath.getPointInsideTile(tile);
-      roadPath.getPointPrevious(point);
+      const prevPoint = roadPath.getPointPreviousPoint(point);
+      const newPoint = new RoadPoint({
+        x: (point.x + prevPoint.x) / 2,
+        y: (point.y + prevPoint.y) / 2,
+        roadPath
+      });
+      console.log(newPoint);
     });
   }
 

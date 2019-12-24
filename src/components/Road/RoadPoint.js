@@ -1,8 +1,9 @@
 class RoadPoint {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
+  constructor(props) {
+    this.x = props.x;
+    this.y = props.y;
     this.edges = [];
+    this.roadPath = props.roadPath;
   }
 }
 
