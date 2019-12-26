@@ -10,7 +10,6 @@ const config = {
   entry: {
     app: path.join(__dirname, 'src/app')
   },
-  devtool: devMode ? 'cheap-module-source-map' : false,
   output: {
     filename: devMode ? '[name].bundle.js' : '[name].[hash].bundle.js'
   },

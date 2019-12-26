@@ -97,13 +97,14 @@ class DarwinCity {
           this.matrix.setTileContent(tile.x, tile.y, road);
         });
 
-        road.drawOnCanvas(ctx);
         this.roads.forEach((road2) => {
           Road.createRoadsJunctions(road, road2);
         });
         this.roads.push(road);
       }
     });
+
+    this.roads.forEach((road) => road.drawOnCanvas(ctx));
   }
 
   createCarRouteTrace(car) {

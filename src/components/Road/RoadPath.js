@@ -13,69 +13,107 @@ class RoadPath {
   constructor(props) {
     this.name = props.name;
     this.way = props.way;
-    this.points = props.points;
     this.road = props.road;
+    this.initPoint = null;
+  }
 
-    this.points.forEach((point) => {
-      point.roadPath = this;
-    });
+  addPoint(point) {
+    point.roadPath = this;
+
+    if(!this.initPoint) {
+      this.initPoint = point;
+      return;
+    }
+
+    const deepPoint = this.getDeepestPoint();
+    deepPoint.addNextPoint(point);
+  }
+
+  find(condition) {
+    function compare(point) {
+      if(condition(point)) {
+        return point;
+      }
+      const nextLen = point.nextPoints.length;
+
+      for(let i = 0; i < nextLen; i++) {
+        const foundPoint = compare(point.nextPoints[i]);
+        if(foundPoint) {
+          return foundPoint;
+        }
+      }
+
+      return null;
+    }
+
+    return compare(this.initPoint);
+  }
+
+  getDeepestPoint() {
+    return this.find((point) => point.nextPoints.length === 0);
   }
 
   getPointInsideTile(tile) {
     const halfTileSize = constants.tileSize / 2;
-    let point;
 
-    for(let i = 0; i < this.points.length; i++) {
-      point = this.points[i];
+    return this.find((point) => {
       if(point.x > (tile.sceneX - halfTileSize) && point.x < (tile.sceneX + halfTileSize) && point.y > (tile.sceneY - halfTileSize) && point.y < (tile.sceneY + halfTileSize)) {
-        return point;
+        return true;
       }
-    }
 
-    return null;
+      return false;
+    });
   }
 
-  getPointPreviousPoint(point) {
-    let prevPoint;
-
-    for(let i = 0; i < this.points.length; i++) {
-      prevPoint = this.points[i];
-      if(prevPoint.edges.indexOf(point) !== -1) {
-        return prevPoint;
+  getPointPreviousPoint(searchingPoint) {
+    return this.find((point) => {
+      if(point.nextPoints.indexOf(searchingPoint) !== -1) {
+        return true;
       }
-    }
+
+      return false;
+    });
+  }
+
+  addPointAt(point, index) {
+    point.roadPath = this;
+    this.points.splice(index, 0, point);
   }
 
   static drawOnCanvas(ctx, roadPath) {
-    const firstPoint = roadPath.points[0];
-    const pointsLen = roadPath.points.length;
-
+    const firstPoint = roadPath.initPoint;
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
     // Lines
     ctx.beginPath();
     ctx.strokeStyle = colors.ways[roadPath.way];
-    ctx.moveTo(firstPoint.x, firstPoint.y);
 
-    for(let i = 1; i < pointsLen; i++) {
-      const point = roadPath.points[i];
-      ctx.lineTo(point.x, point.y);
+    function drawLines(point) {
+      point.nextPoints.forEach((nextPoint) => {
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(nextPoint.x, nextPoint.y);
+
+        drawLines(nextPoint);
+      });
     }
+    drawLines(firstPoint);
 
     ctx.stroke();
     ctx.closePath();
 
     // Arrows
-    const x = roadPath.points[1].x - roadPath.points[0].x;
-    const y = roadPath.points[1].y - roadPath.points[0].y;
+    const x = roadPath.initPoint.nextPoints[0].x - roadPath.initPoint.x;
+    const y = roadPath.initPoint.nextPoints[0].y - roadPath.initPoint.y;
     const angle = utils.calcAngleDegrees(x, y);
 
-    let point;
     let edgeX;
     let edgeY;
 
-    for(let i = 0; i < pointsLen; i++) {
-      point = roadPath.points[i];
+    function drawArrows(point) {
+      if(!point.nextPoints.length) {
+        return;
+      }
+
       ctx.beginPath();
       ctx.fillStyle = colors.ways[roadPath.way];
       edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
@@ -91,7 +129,9 @@ class RoadPath {
       ctx.lineTo(edgeX, edgeY);
       ctx.fill();
       ctx.closePath();
+      point.nextPoints.forEach(drawArrows);
     }
+    drawArrows(firstPoint);
 
     // Texts
     ctx.textAlign = 'center';
