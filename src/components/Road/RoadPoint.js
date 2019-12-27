@@ -4,7 +4,6 @@ class RoadPoint {
     this.y = props.y;
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
-    this.transfer = false;
   }
 
   addBefore(anotherPoint) {

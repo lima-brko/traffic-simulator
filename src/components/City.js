@@ -114,7 +114,7 @@ class DarwinCity {
     });
 
     car.route.forEach((point) => {
-      geometry.vertices.push(new Vector3(point.sceneX, point.sceneY, -5));
+      geometry.vertices.push(new Vector3(point.x, point.y, -5));
     });
 
     car.routeTrace = new Line(geometry, material);
@@ -131,19 +131,21 @@ class DarwinCity {
   }
 
   createRandomCar() {
-    const startDirection = utils.getRandomInt(0, 2) === 0 ? 0 : 1;
     const fromRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
-    const toRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
-    // const fromTile = fromRoad.tiles[startDirection ? 0 : fromRoad.tiles.length - 1];
-    const fromTile = this.matrix.getTile(2, 0);
-    // const toTile = toRoad.tiles[!startDirection ? 0 : fromRoad.tiles.length - 1];
-    const toTile = this.matrix.getTile(6, 24);
+    const roadWay = utils.getRandomInt(0, 2) === 0 ? 'even' : 'odd';
+    const roadPaths = fromRoad.ways[roadWay];
+    const roadPath = roadPaths[utils.getRandomInt(0, roadPaths.length)];
+    const routePath = roadPath.getPathToAnyEndPoint();
+
     const car = new Car({
-      position: fromTile,
+      position: {
+        x: routePath[0].x,
+        y: routePath[0].y
+      },
       angle: 180
     });
-    // car.setRoute(fromTile, toTile, {onArrival: this.onCarArrival.bind(this)});
-    // this.createCarRouteTrace(car);
+    car.setRoute(routePath, {onArrival: this.onCarArrival.bind(this)});
+    this.createCarRouteTrace(car);
 
     this.scene.add(car.mesh);
     this.cars.push(car);

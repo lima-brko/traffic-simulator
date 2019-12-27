@@ -19,11 +19,11 @@ class Car {
     this.mesh = CarModel.create3dModel(this.color);
     this.mesh.rotation.x = -Math.PI / 2;
 
-    this.setPosition(position.sceneX, position.sceneY);
+    this.setPosition(position.x, position.y);
     this.setAngle(angle);
 
     this.navigation = Navigation;
-    this.currentRouteTile = null;
+    this.currentRoutePoint = null;
 
     this.velocity = 0;
     this.brakePower = 0.1;
@@ -42,11 +42,11 @@ class Car {
 
   getLeftDistanceToEnd() {
     const {x, y} = this.position;
-    const targetTile = this.route[this.currentRouteTile];
-    let leftDistance = utils.getDistance(x, targetTile.sceneY, y, targetTile.sceneY);
+    const targetPoint = this.route[this.currentRoutePoint];
+    let leftDistance = utils.getDistance(x, targetPoint.y, y, targetPoint.y);
 
-    for(let i = this.currentRouteTile + 1; i < this.route.length; i++) {
-      leftDistance += utils.getDistance(this.route[i - 1].sceneX, this.route[i].sceneX, this.route[i - 1].sceneY, this.route[i].sceneY);
+    for(let i = this.currentRoutePoint + 1; i < this.route.length; i++) {
+      leftDistance += utils.getDistance(this.route[i - 1].x, this.route[i].x, this.route[i - 1].y, this.route[i].y);
     }
 
     return leftDistance;
@@ -80,19 +80,10 @@ class Car {
     this.setPosition(newX, newY);
   }
 
-  setRoute(fromTile, toTile, callbacks) {
-    const routeTiles = this.navigation.findBestRoute(fromTile, toTile);
-    this.route = routeTiles.map((tile, idx) => {
-      const deltaX = utils.roundNumber(targetTile.sceneX - x, 1);
-      const deltaY = utils.roundNumber((targetTile.sceneY - y) * -1, 1);
-
-      return {
-        tile,
-        sceneX: 0,
-        sceneY: 0
-      };
-    });
-    this.currentRouteTile = 0;
+  setRoute(routePath, callbacks) {
+    // const routeTiles = this.navigation.findBestRoute(fromTile, toTile);
+    this.route = routePath;
+    this.currentRoutePoint = 0;
     this.callbacks.onArrival = callbacks.onArrival;
   }
 
@@ -121,24 +112,24 @@ class Car {
   // }
 
   nextRoutePoint() {
-    if(this.route[this.currentRouteTile + 1]) {
-      this.currentRouteTile++;
+    if(this.route[this.currentRoutePoint + 1]) {
+      this.currentRoutePoint++;
     } else {
-      this.currentRouteTile = null;
+      this.currentRoutePoint = null;
       this.callbacks.onArrival(this);
     }
   }
 
   update() {
-    if(this.currentRouteTile === null) {
+    if(this.currentRoutePoint === null) {
       return;
     }
 
-    const targetTile = this.route[this.currentRouteTile];
+    const targetPoint = this.route[this.currentRoutePoint];
     const {x, y} = this.position;
 
-    const deltaX = utils.roundNumber(targetTile.sceneX - x, 1);
-    const deltaY = utils.roundNumber((targetTile.sceneY - y) * -1, 1);
+    const deltaX = utils.roundNumber(targetPoint.x - x, 1);
+    const deltaY = utils.roundNumber((targetPoint.y - y) * -1, 1);
 
     if(deltaX === 0 && deltaY === 0) {
       return this.nextRoutePoint();
@@ -163,8 +154,9 @@ class Car {
 
     this.calculateNextPosition();
 
-    if(targetTile.sceneX === this.position.x &&
-       targetTile.sceneY === this.position.y) {
+    const targetPointDist = Math.sqrt(((targetPoint.x - this.position.x) ** 2) + ((targetPoint.y - this.position.y) ** 2));
+
+    if(targetPointDist < this.maxVelocity) {
       this.nextRoutePoint();
     }
   }

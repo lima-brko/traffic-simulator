@@ -65,6 +65,21 @@ class RoadPath {
     });
   }
 
+  getPathToAnyEndPoint() {
+    function move(point, path) {
+      path.push(point);
+
+      if(!point.nextPoints.length) {
+        return path;
+      }
+
+      const randomNextPoint = point.nextPoints[utils.getRandomInt(0, point.nextPoints.length)];
+      return move(randomNextPoint, path);
+    }
+
+    return move(this.initPoint, []);
+  }
+
   getPointPreviousPoint(searchingPoint) {
     return this.find((point) => {
       if(point.nextPoints.indexOf(searchingPoint) !== -1) {
@@ -90,6 +105,10 @@ class RoadPath {
 
     function drawLines(point) {
       point.nextPoints.forEach((nextPoint) => {
+        if(point.roadPath.name !== nextPoint.roadPath.name) {
+          return;
+        }
+
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(nextPoint.x, nextPoint.y);
 
@@ -129,7 +148,13 @@ class RoadPath {
       ctx.lineTo(edgeX, edgeY);
       ctx.fill();
       ctx.closePath();
-      point.nextPoints.forEach(drawArrows);
+      point.nextPoints.forEach((nextPoint) => {
+        if(point.roadPath.name !== nextPoint.roadPath.name) {
+          return;
+        }
+
+        drawArrows(nextPoint);
+      });
     }
     drawArrows(firstPoint);
 
