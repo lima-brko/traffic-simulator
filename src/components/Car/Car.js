@@ -1,5 +1,8 @@
+import *as THREE from 'three';
+import gsap from 'gsap';
+
 import CarModel from './CarModel';
-// import CarSensor from './CarSensor';
+import CarSensor from './CarSensor';
 import Navigation from '../../services/Navigation';
 import utils from '../../helpers/utils';
 
@@ -10,6 +13,8 @@ class Car {
       angle
     } = props;
 
+    this.collidableMeshList = props.collidableMeshList;
+    this.broken = false;
     this.position = {
       x: 0,
       y: 0
@@ -17,6 +22,7 @@ class Car {
     this.handleAngle = 0;
     this.color = utils.getRandomColor();
     this.mesh = CarModel.create3dModel(this.color);
+    this.hitboxMesh = this.mesh.children.find((mesh) => mesh.name === 'hitbox');
     this.mesh.rotation.x = -Math.PI / 2;
 
     this.setPosition(position.x, position.y);
@@ -28,16 +34,19 @@ class Car {
     this.velocity = 0;
     this.brakePower = 0.1;
     this.accelerationPower = 0.1;
-    this.maxVelocity = 0.5;
+
+    this.maxVelocity = 1.5;
+    // this.maxVelocity = utils.getRandomInt(15, 20) / 10;
     this.callbacks = {
+      onBrake: () => {},
       onArrival: () => {}
     };
 
-    // this.sensors = {
-    //   front: new CarSensor(this.mesh.position, 0)
-    // };
+    this.sensors = [
+      new CarSensor(this.mesh.position, this.mesh.rotation)
+    ];
 
-    // this.mesh.add(this.sensors.front.createMesh());
+    this.mesh.add(this.sensors[0].createMesh());
   }
 
   getLeftDistanceToEnd() {
@@ -85,6 +94,7 @@ class Car {
     this.route = routePath;
     this.currentRoutePoint = 0;
     this.callbacks.onArrival = callbacks.onArrival;
+    this.callbacks.onBrake = callbacks.onBrake;
   }
 
   accelerate() {
@@ -120,9 +130,55 @@ class Car {
     }
   }
 
-  update() {
+  break() {
+    if(this.broken) {
+      return;
+    }
+
+    const _this = this;
+    const materials = {
+      gray: new THREE.MeshBasicMaterial({color: 0xAEAEAE}),
+      black: new THREE.MeshBasicMaterial({color: 0x222222})
+    };
+
+    function animateColor(mesh) {
+      const initial = new THREE.Color(materials.gray.color.getHex());
+      const value = new THREE.Color(materials.black.color.getHex());
+
+      gsap.to(initial, 1, {
+        r: value.r,
+        g: value.g,
+        b: value.b,
+
+        onUpdate() {
+          mesh.material.color = initial;
+        },
+        onComplete() {
+          _this.callbacks.onBrake(_this);
+        }
+      });
+    }
+
+    this.broken = true;
+    this.mesh.children.forEach(animateColor);
+  }
+
+  update(index) {
+    if(this.broken) {
+      return;
+    }
+
     if(this.currentRoutePoint === null) {
       return;
+    }
+
+    // const collisions = utils.checkCollision(this.hitboxMesh, this.collidableMeshList);
+    // if(collisions.length) {
+    //   this.break();
+    //   return;
+    // }
+    if(index === 0) {
+      this.sensors.forEach((sensor) => sensor.update());
     }
 
     const targetPoint = this.route[this.currentRoutePoint];
@@ -140,7 +196,6 @@ class Car {
       this.setAngle(bestAngle);
     }
 
-    // if(isLastTile) {
     const leftDistance = this.getLeftDistanceToEnd();
     const distanceToStop = this.getStoppingDistance();
     if(distanceToStop >= leftDistance) {
@@ -148,9 +203,6 @@ class Car {
     } else {
       this.accelerate();
     }
-    // } else {
-    //   this.accelerate();
-    // }
 
     this.calculateNextPosition();
 

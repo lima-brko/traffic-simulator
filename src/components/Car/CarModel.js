@@ -3,8 +3,11 @@ import {
   MeshBasicMaterial,
   Group,
   BoxBufferGeometry,
+  BoxGeometry,
   CanvasTexture
 } from 'three';
+
+const carSize = 30;
 
 function createCabinTexture(width, height, rects) {
   const canvas = document.createElement('canvas');
@@ -57,7 +60,7 @@ function create3dModel(color) {
 
   // Car Chassis
   const main = new Mesh(
-    new BoxBufferGeometry(14, 30, 7),
+    new BoxBufferGeometry(14, carSize, 7),
     new MeshBasicMaterial({color, flatShading: true})
   );
   main.position.z = 6;
@@ -88,9 +91,24 @@ function create3dModel(color) {
   backWheel.position.y = 9;
   carGroup.add(backWheel);
 
+  // Car HitBox
+  const hitbox = new Mesh(
+    new BoxGeometry(14, carSize, 20),
+    new MeshBasicMaterial({
+      color,
+      opacity: 0.5,
+      transparent: true
+    })
+  );
+  hitbox.material.visible = false;
+  hitbox.position.z = 6;
+  hitbox.name = 'hitbox';
+  carGroup.add(hitbox);
+
   return carGroup;
 }
 
 export default {
-  create3dModel
+  create3dModel,
+  carSize
 };

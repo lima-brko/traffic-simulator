@@ -1,3 +1,5 @@
+import {Raycaster} from 'three';
+
 const utils = {
   roundNumber(number, decimals) {
     const newnumber = Number(`${number}`).toFixed(parseInt(decimals, 10));
@@ -54,6 +56,31 @@ const utils = {
     };
 
     image.src = url;
+  },
+  checkCollision(obj, collidableMeshList) {
+    const objVertices = obj.geometry.vertices;
+    // const objList = collidableMeshList.filter((listObj) => listObj !== obj);
+    let localVertex;
+    let globalVertex;
+    let directionVector;
+    let ray;
+    let collisionResults;
+    let vertexIndex;
+
+    for(vertexIndex = 0; vertexIndex < objVertices.length; vertexIndex++) {
+      localVertex = objVertices[vertexIndex].clone();
+      globalVertex = localVertex.applyMatrix4(obj.parent.matrix);
+      directionVector = globalVertex.sub(obj.parent.position);
+
+      ray = new Raycaster(obj.parent.position.clone(), directionVector.clone().normalize(), 0, 20);
+      collisionResults = ray.intersectObjects(collidableMeshList);
+
+      if(collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+        return collisionResults;
+      }
+    }
+
+    return [];
   }
 };
 

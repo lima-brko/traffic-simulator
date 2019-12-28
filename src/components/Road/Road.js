@@ -45,6 +45,17 @@ class Road {
     });
   }
 
+  getInitPoints() {
+    const initPoints = [];
+    Object.keys(this.ways).forEach((way) => {
+      this.ways[way].forEach((roadPath) => {
+        initPoints.push(roadPath.initPoint);
+      });
+    });
+
+    return initPoints;
+  }
+
   drawOnCanvas(ctx) {
     Object.keys(this.ways).forEach((way) => {
       this.ways[way].forEach((roadPath) => {

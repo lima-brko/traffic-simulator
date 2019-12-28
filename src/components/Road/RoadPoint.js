@@ -1,9 +1,26 @@
+import utils from '../../helpers/utils';
+
 class RoadPoint {
   constructor(props) {
     this.x = props.x;
     this.y = props.y;
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
+  }
+
+  generatePathToAnyEndPoint() {
+    function move(point, path) {
+      path.push(point);
+
+      if(!point.nextPoints.length) {
+        return path;
+      }
+
+      const randomNextPoint = point.nextPoints[utils.getRandomInt(0, point.nextPoints.length)];
+      return move(randomNextPoint, path);
+    }
+
+    return move(this, []);
   }
 
   addBefore(anotherPoint) {
