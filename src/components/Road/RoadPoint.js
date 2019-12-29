@@ -1,9 +1,11 @@
+import {Vector3} from 'three';
 import utils from '../../helpers/utils';
 
 class RoadPoint {
   constructor(props) {
     this.x = props.x;
     this.y = props.y;
+    this.vector3 = new Vector3(this.x, 0, this.y);
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
   }

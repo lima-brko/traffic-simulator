@@ -13,7 +13,6 @@ class Car {
       angle
     } = props;
 
-    this.collidableMeshList = props.collidableMeshList;
     this.broken = false;
     this.position = {
       x: 0,
@@ -32,37 +31,37 @@ class Car {
     this.currentRoutePoint = null;
 
     this.velocity = 0;
-    this.brakePower = 0.1;
+    this.brakePower = 0.05;
     this.accelerationPower = 0.1;
 
-    this.maxVelocity = 1.5;
-    // this.maxVelocity = utils.getRandomInt(15, 20) / 10;
+    this.maxVelocity = utils.getRandomInt(15, 20) / 10;
     this.callbacks = {
       onBrake: () => {},
       onArrival: () => {}
     };
 
     this.sensors = [
-      new CarSensor(this.mesh.position, this.mesh.rotation)
+      new CarSensor({
+        name: 'front',
+        car: this,
+        far: this.getStoppingDistance(this.maxVelocity) + CarModel.carSize + 10
+      })
     ];
-
-    this.mesh.add(this.sensors[0].createMesh());
+    this.mesh.add(this.sensors[0].line);
   }
 
   getLeftDistanceToEnd() {
-    const {x, y} = this.position;
-    const targetPoint = this.route[this.currentRoutePoint];
-    let leftDistance = utils.getDistance(x, targetPoint.y, y, targetPoint.y);
+    let leftDistance = this.mesh.position.distanceTo(this.route[this.currentRoutePoint].vector3);
 
     for(let i = this.currentRoutePoint + 1; i < this.route.length; i++) {
-      leftDistance += utils.getDistance(this.route[i - 1].x, this.route[i].x, this.route[i - 1].y, this.route[i].y);
+      leftDistance += this.route[i - 1].vector3.distanceTo(this.route[i].vector3);
     }
 
     return leftDistance;
   }
 
-  getStoppingDistance() {
-    let tmpVelocity = this.velocity;
+  getStoppingDistance(velocity) {
+    let tmpVelocity = velocity;
     let stoppingDistance = 0;
     while(tmpVelocity > 0) {
       tmpVelocity -= this.brakePower;
@@ -126,7 +125,9 @@ class Car {
       this.currentRoutePoint++;
     } else {
       this.currentRoutePoint = null;
-      this.callbacks.onArrival(this);
+      setTimeout(() => {
+        this.callbacks.onArrival(this);
+      });
     }
   }
 
@@ -141,44 +142,66 @@ class Car {
       black: new THREE.MeshBasicMaterial({color: 0x222222})
     };
 
-    function animateColor(mesh) {
-      const initial = new THREE.Color(materials.gray.color.getHex());
-      const value = new THREE.Color(materials.black.color.getHex());
+    const initial = new THREE.Color(materials.gray.color.getHex());
+    const value = new THREE.Color(materials.black.color.getHex());
 
-      gsap.to(initial, 1, {
-        r: value.r,
-        g: value.g,
-        b: value.b,
+    gsap.to(initial, 1, {
+      r: value.r,
+      g: value.g,
+      b: value.b,
 
-        onUpdate() {
+      onUpdate() {
+        _this.mesh.children.forEach((mesh) => {
+          if(mesh.name === 'sensor') {
+            return;
+          }
+
           mesh.material.color = initial;
-        },
-        onComplete() {
-          _this.callbacks.onBrake(_this);
-        }
+        });
+      },
+      onComplete() {
+        _this.callbacks.onBrake(_this);
+      }
+    });
+
+    this.broken = true;
+  }
+
+  resetSensors() {
+    this.sensors.forEach((sensor) => sensor.reset());
+  }
+
+  checkCollision(collidableList) {
+    if(this.broken) {
+      return;
+    }
+
+    if(!collidableList.length) {
+      this.resetSensors();
+      return;
+    }
+
+    const collidableMeshList = collidableList.map((car) => car.hitboxMesh);
+    const collisions = utils.checkCollision(this.hitboxMesh, collidableMeshList);
+    if(collisions.length) {
+      this.break();
+      collisions.forEach((collision) => {
+        collidableList[collidableMeshList.indexOf(collision.object)].break();
       });
     }
 
-    this.broken = true;
-    this.mesh.children.forEach(animateColor);
+    this.sensors.forEach((sensor) => {
+      sensor.update(collidableMeshList);
+    });
   }
 
-  update(index) {
+  update() {
     if(this.broken) {
       return;
     }
 
     if(this.currentRoutePoint === null) {
       return;
-    }
-
-    // const collisions = utils.checkCollision(this.hitboxMesh, this.collidableMeshList);
-    // if(collisions.length) {
-    //   this.break();
-    //   return;
-    // }
-    if(index === 0) {
-      this.sensors.forEach((sensor) => sensor.update());
     }
 
     const targetPoint = this.route[this.currentRoutePoint];
@@ -196,10 +219,15 @@ class Car {
       this.setAngle(bestAngle);
     }
 
-    const leftDistance = this.getLeftDistanceToEnd();
-    const distanceToStop = this.getStoppingDistance();
-    if(distanceToStop >= leftDistance) {
-      this.brakePower();
+    const endDistance = this.getLeftDistanceToEnd();
+    const distanceToStop = this.getStoppingDistance(this.velocity);
+    const sensorDistance = this.sensors[0].distance;
+    const sensorOn = sensorDistance !== null && sensorDistance <= (distanceToStop + 10);
+
+    if(endDistance <= distanceToStop || sensorOn) {
+      this.brake();
+    } else if(sensorDistance === distanceToStop) {
+      // this.accelerate();
     } else {
       this.accelerate();
     }

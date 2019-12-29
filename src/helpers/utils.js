@@ -59,7 +59,6 @@ const utils = {
   },
   checkCollision(obj, collidableMeshList) {
     const objVertices = obj.geometry.vertices;
-    // const objList = collidableMeshList.filter((listObj) => listObj !== obj);
     let localVertex;
     let globalVertex;
     let directionVector;
@@ -72,7 +71,7 @@ const utils = {
       globalVertex = localVertex.applyMatrix4(obj.parent.matrix);
       directionVector = globalVertex.sub(obj.parent.position);
 
-      ray = new Raycaster(obj.parent.position.clone(), directionVector.clone().normalize(), 0, 20);
+      ray = new Raycaster(obj.parent.position.clone(), directionVector.clone().normalize(), 0, 30);
       collisionResults = ray.intersectObjects(collidableMeshList);
 
       if(collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {

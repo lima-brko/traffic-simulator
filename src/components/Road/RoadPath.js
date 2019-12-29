@@ -35,9 +35,15 @@ class RoadPath {
         return point;
       }
       const nextLen = point.nextPoints.length;
+      let nextPoint;
 
       for(let i = 0; i < nextLen; i++) {
-        const foundPoint = compare(point.nextPoints[i]);
+        nextPoint = point.nextPoints[i];
+        if(nextPoint.roadPath.name !== point.roadPath.name) {
+          continue;
+        }
+
+        const foundPoint = compare(nextPoint);
         if(foundPoint) {
           return foundPoint;
         }

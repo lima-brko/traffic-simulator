@@ -1,54 +1,80 @@
 import {
   Raycaster,
   Vector3,
-  CylinderBufferGeometry,
-  MeshBasicMaterial,
-  Mesh
+  Line,
+  LineBasicMaterial,
+  Geometry
 
 } from 'three';
-import utils from '../../helpers/utils';
 
-const dist = 30;
+const materials = {
+  green: new LineBasicMaterial({
+    color: 0x3ffe00
+  }),
+  yellow: new LineBasicMaterial({
+    color: 0xfdcc00
+  })
+};
 
 class CarSensor {
-  constructor(position, rotation) {
-    const {x, y, z} = position;
+  constructor(props) {
+    this.name = props.name;
+    this.car = props.car;
+    this.far = props.far;
+    this.distance = null;
+    this.raycaster = new Raycaster();
+    this.raycaster.far = props.far;
 
-    this.position = position;
-    this.rotation = rotation;
-
-    const directionPos = {
-      x: x + Math.cos(utils.angleToRadians(z)) * dist,
-      y: y + Math.sin(utils.angleToRadians(z)) * dist
-    };
-
-    this.direction = new Vector3(directionPos.x, directionPos.y, -5);
-    this.raycaster = new Raycaster(position, this.direction, 0, 30);
-    console.log(this.ray);
+    this.line = this.createLine();
   }
 
-  updateDirection() {
-    const {x, y, z} = this.position;
-    const directionPos = {
-      x: x + Math.cos(utils.angleToRadians(z)) * dist,
-      y: y + Math.sin(utils.angleToRadians(z)) * dist
-    };
-    this.direction.set(directionPos.x, directionPos.y, -5);
+  createLine() {
+    const geometry = new Geometry();
+    geometry.vertices.push(
+      new Vector3(0, 0, 6),
+      new Vector3(0, this.far, 6)
+    );
+    const line = new Line(geometry, materials.green);
+    line.name = 'sensor';
+    return line;
   }
 
-  createMesh() {
-    const {x, y} = this.position;
-    const geometry = new CylinderBufferGeometry(1, 1, 100, 10);
-    const material = new MeshBasicMaterial({color: 0xff0000, opacity: 0.5, transparent: true});
-    const mesh = new Mesh(geometry, material);
-    mesh.position.set(x, y, 5);
-    mesh.rotation.z = 0 * Math.PI / 180;
-    return mesh;
+  setLineMaterial(material) {
+    if(this.line.material !== material) {
+      this.line.material = material;
+    }
   }
 
-  update() {
-    console.log(this.raycaster.ray.origin);
-    // this.raycaster.ray.origin.set();
+  reset() {
+    if(this.line.material !== materials.green) {
+      this.line.material = materials.green;
+    }
+
+    this.distance = null;
+  }
+
+  update(collidableMeshList) {
+    const localVertex = this.line.geometry.vertices[1].clone();
+    const globalVertex = localVertex.applyMatrix4(this.line.parent.matrix);
+    const directionVector = globalVertex.sub(this.line.parent.position);
+
+    this.raycaster.set(this.car.mesh.position.clone(), directionVector.clone().normalize());
+
+    const collisions = this.raycaster.intersectObjects(collidableMeshList);
+    if(collisions.length) {
+      const closestCollision = collisions.reduce((acc, collision) => {
+        if(!acc || collision.distance < acc.distance) {
+          return collision;
+        }
+
+        return acc;
+      });
+
+      this.distance = closestCollision.distance;
+      this.setLineMaterial(materials.yellow);
+    } else {
+      this.setLineMaterial(materials.green);
+    }
   }
 }
 
