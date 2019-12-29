@@ -31,7 +31,7 @@ class Car {
     this.currentRoutePoint = null;
 
     this.velocity = 0;
-    this.brakePower = 0.05;
+    this.brakePower = 0.02;
     this.accelerationPower = 0.1;
 
     this.maxVelocity = utils.getRandomInt(15, 20) / 10;

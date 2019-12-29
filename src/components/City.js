@@ -38,7 +38,8 @@ class DarwinCity {
         width: 30,
         height: 101,
         depth: 20,
-        x: 150
+        x: 150,
+        y: -200
       })
     ];
     this.cars = [];
@@ -71,7 +72,7 @@ class DarwinCity {
     axes.forEach((axis) => {
       let counter = 0;
 
-      for(let i = 8; i < this.matrix.size; i += 6) {
+      for(let i = 4; i < this.matrix.size; i += 8) {
         counter++;
         const tiles = [];
 

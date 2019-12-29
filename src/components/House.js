@@ -38,6 +38,7 @@ class House {
     );
 
     this.mesh.position.x = props.x;
+    this.mesh.position.z = props.y;
     this.mesh.position.y = props.height / 2;
     this.mesh.rotation.x = -Math.PI / 2;
   }

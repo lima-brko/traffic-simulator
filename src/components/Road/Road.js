@@ -2,6 +2,7 @@ import contants from '../../helpers/constants';
 import utils from '../../helpers/utils';
 import RoadPath from './RoadPath';
 import RoadPoint from './RoadPoint';
+import constants from '../../helpers/constants';
 
 class Road {
   constructor(props) {
@@ -57,11 +58,38 @@ class Road {
   }
 
   drawOnCanvas(ctx) {
-    Object.keys(this.ways).forEach((way) => {
-      this.ways[way].forEach((roadPath) => {
-        // RoadPath.drawOnCanvas(ctx, roadPath);
-      });
+    const halfTileSize = constants.tileSize / 2;
+
+    this.tiles.forEach((tile, i) => {
+      const x = constants.tileSize * tile.x;
+      const y = constants.tileSize * tile.y;
+
+      ctx.fillStyle = '#989899';
+      ctx.fillRect(x, y, constants.tileSize, constants.tileSize);
+
+      if(i === 0) {
+        ctx.textAlign = 'center';
+        ctx.font = '11px Verdana';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(this.name, x + halfTileSize, y + halfTileSize);
+      }
     });
+
+    const firstTile = this.tiles[0];
+    const lastTile = this.tiles[this.tiles.length - 1];
+    ctx.strokeStyle = '#fff';
+    ctx.beginPath();
+    ctx.setLineDash([10, 15]);
+    ctx.moveTo((constants.tileSize * firstTile.x) + halfTileSize, (constants.tileSize * firstTile.y) + halfTileSize);
+    ctx.lineTo((constants.tileSize * lastTile.x) + halfTileSize, (constants.tileSize * lastTile.y) + halfTileSize);
+    ctx.stroke();
+
+
+    // Object.keys(this.ways).forEach((way) => {
+    //   this.ways[way].forEach((roadPath) => {
+    //     RoadPath.drawOnCanvas(ctx, roadPath);
+    //   });
+    // });
   }
 
   findClosestPoint(x, y) {
@@ -99,9 +127,12 @@ class Road {
           roadPath
         });
         const nextPoint = point.nextPoints[0];
+
+        // Point relocate in front
         point.x = (point.x + nextPoint.x) / 2;
         point.y = (point.y + nextPoint.y) / 2;
 
+        // Left curve
         const x = point.x - newPoint.x;
         const y = point.y - newPoint.y;
         const angle = utils.calcAngleDegrees(x, y);
@@ -125,6 +156,15 @@ class Road {
         const transferPoint = oppositeRoad.findClosestPoint(beforeTransferPoint.x, beforeTransferPoint.y);
         beforeTransferPoint.addNextPoint(transferPoint);
         point.addBefore(newPoint);
+
+        // Right curve
+        const rightTransferPoint = new RoadPoint({
+          x: newPoint.x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize * 0.25),
+          y: newPoint.y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize * 0.25),
+          roadPath
+        });
+        rightTransferPoint.addNextPoint(oppositeRoad.findClosestPoint(rightTransferPoint.x, rightTransferPoint.y));
+        point.addBefore(rightTransferPoint);
       });
     });
   }
