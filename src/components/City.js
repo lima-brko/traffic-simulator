@@ -17,7 +17,7 @@ import CarModel from './Car/CarModel';
 import Road from './Road';
 import WorldMatrix from '../services/WorldMatrix';
 import constants from '../helpers/constants';
-import utils from '../helpers/utils';
+// import utils from '../helpers/utils';
 
 class DarwinCity {
   constructor() {
@@ -33,6 +33,7 @@ class DarwinCity {
     this.groundCanvas.height = this.height;
 
     this.roads = [];
+    this.junctions = [];
     this.houses = [
       new House({
         width: 30,
@@ -91,13 +92,18 @@ class DarwinCity {
         });
 
         this.roads.forEach((road2) => {
-          Road.createRoadsJunctions(road, road2);
+          const junction = Road.createRoadsJunctions(road, road2);
+          if(junction) {
+            this.junctions.push(junction);
+            this.matrix.setTileContent(junction.tile.x, junction.tile.y, junction);
+          }
         });
         this.roads.push(road);
       }
     });
 
     this.roads.forEach((road) => road.drawOnCanvas(ctx));
+    this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
   }
 
   createCarRouteTrace(car) {
