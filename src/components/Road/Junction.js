@@ -1,13 +1,19 @@
+import {
+  Group
+} from 'three';
+
 import contants from '../../helpers/constants';
 import utils from '../../helpers/utils';
-// import RoadPath from './RoadPath';
 import RoadPoint from './RoadPoint';
+import TrafficLight from './TrafficLight';
 import constants from '../../helpers/constants';
 
 class Junction {
   constructor(roads, tile) {
     this.roads = roads;
     this.tile = tile;
+
+    this.trafficLights = [];
 
     this.roads.forEach((road, i) => {
       ['even', 'odd'].forEach((way) => {
@@ -21,16 +27,25 @@ class Junction {
           roadPath
         });
         const nextPoint = point.nextPoints[0];
+        const x = point.x - newPoint.x;
+        const y = point.y - newPoint.y;
+        const angle = utils.calcAngleDegrees(x, y);
+
+        // Create Traffic Light
+        const trafficLight = new TrafficLight({
+          junction: this,
+          roadPath
+        });
+        trafficLight.mesh.position.set(newPoint.x, 0, newPoint.y);
+        trafficLight.mesh.rotation.y = utils.angleToRadians((angle * -1) - 90);
+
+        this.trafficLights.push(trafficLight);
 
         // Point relocate in front
         point.x = (point.x + nextPoint.x) / 2;
         point.y = (point.y + nextPoint.y) / 2;
 
         // Left curve
-        const x = point.x - newPoint.x;
-        const y = point.y - newPoint.y;
-        const angle = utils.calcAngleDegrees(x, y);
-
         const seg1 = {
           x: newPoint.x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize * 0.75),
           y: newPoint.y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize * 0.75)

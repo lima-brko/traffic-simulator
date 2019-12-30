@@ -16,6 +16,7 @@ import Car from './Car';
 import CarModel from './Car/CarModel';
 import Road from './Road';
 import WorldMatrix from '../services/WorldMatrix';
+import TrafficLightController from '../services/TrafficLightController';
 import constants from '../helpers/constants';
 // import utils from '../helpers/utils';
 
@@ -44,6 +45,8 @@ class DarwinCity {
       })
     ];
     this.cars = [];
+    this.trafficLights = [];
+    this.callbacks = {};
 
     this.initilize();
   }
@@ -126,6 +129,9 @@ class DarwinCity {
     this.cars.splice(index, 1);
     this.scene.remove(car.mesh);
     this.scene.remove(car.routeTrace);
+    if(this.callbacks.carAccident) {
+      this.callbacks.carAccident();
+    }
   }
 
   onCarArrival(car) {
@@ -133,6 +139,9 @@ class DarwinCity {
     this.cars.splice(index, 1);
     this.scene.remove(car.mesh);
     this.scene.remove(car.routeTrace);
+    if(this.callbacks.carArrival) {
+      this.callbacks.carArrival();
+    }
   }
 
   createRandomCar(point, index) {
@@ -239,9 +248,21 @@ class DarwinCity {
     // });
   }
 
+  installTrafficController() {
+    this.junctions.forEach((junction) => {
+      junction.trafficLights.forEach((trafficLight) => {
+        this.trafficLights.push(trafficLight);
+        this.scene.add(trafficLight.mesh);
+      });
+    });
+
+    new TrafficLightController(this.trafficLights);
+  }
+
   initilize() {
     this.drawTilesGrid();
     this.populateRoads();
+    this.installTrafficController();
     this.populateBuildings();
     this.populateCars();
     this.createGround();
@@ -266,7 +287,7 @@ class DarwinCity {
     const dangerZoneRadius = 90;
     let dist;
 
-    return this.cars.filter((car2) => {
+    const cars = this.cars.filter((car2) => {
       if(car2.broken || car === car2) {
         return false;
       }
@@ -275,6 +296,24 @@ class DarwinCity {
 
       return dist < dangerZoneRadius;
     });
+
+    const carRoadPath = car.route[car.currentRoutePoint];
+    const trafficLights = this.trafficLights.filter((trafficLight) => {
+      if(trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green') {
+        return false;
+      }
+
+      dist = car.mesh.position.distanceTo(trafficLight.mesh.position);
+
+      return dist < dangerZoneRadius;
+    });
+
+    return [...cars, ...trafficLights];
+  }
+
+  on(eventName, callback) {
+    this.callbacks[eventName] = callback;
+    return this;
   }
 
   updateCars() {

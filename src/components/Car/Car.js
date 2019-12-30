@@ -31,7 +31,7 @@ class Car {
     this.currentRoutePoint = null;
 
     this.velocity = 0;
-    this.brakePower = 0.02;
+    this.brakePower = 0.08;
     this.accelerationPower = 0.1;
 
     this.maxVelocity = utils.getRandomInt(15, 20) / 10;
@@ -186,6 +186,10 @@ class Car {
     if(collisions.length) {
       this.break();
       collisions.forEach((collision) => {
+        if(collision.object.name === 'traffic_light_hitbox') {
+          return;
+        }
+
         collidableList[collidableMeshList.indexOf(collision.object)].break();
       });
     }
@@ -222,7 +226,7 @@ class Car {
     const endDistance = this.getLeftDistanceToEnd();
     const distanceToStop = this.getStoppingDistance(this.velocity);
     const sensorDistance = this.sensors[0].distance;
-    const sensorOn = sensorDistance !== null && sensorDistance <= (distanceToStop + 10);
+    const sensorOn = sensorDistance !== null && sensorDistance <= (distanceToStop + 50);
 
     if(endDistance <= distanceToStop || sensorOn) {
       this.brake();

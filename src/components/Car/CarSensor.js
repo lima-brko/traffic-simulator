@@ -46,10 +46,7 @@ class CarSensor {
   }
 
   reset() {
-    if(this.line.material !== materials.green) {
-      this.line.material = materials.green;
-    }
-
+    this.setLineMaterial(materials.green);
     this.distance = null;
   }
 
@@ -73,7 +70,7 @@ class CarSensor {
       this.distance = closestCollision.distance;
       this.setLineMaterial(materials.yellow);
     } else {
-      this.setLineMaterial(materials.green);
+      this.reset();
     }
   }
 }
