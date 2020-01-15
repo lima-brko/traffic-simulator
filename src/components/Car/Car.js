@@ -5,6 +5,7 @@ import CarModel from './CarModel';
 import CarSensor from './CarSensor';
 import Navigation from '../../services/Navigation';
 import utils from '../../helpers/utils';
+import TrafficLight from '../Road/TrafficLight';
 
 class Car {
   constructor(props) {
@@ -32,7 +33,7 @@ class Car {
 
     this.velocity = 0;
     this.brakePower = 0.08;
-    this.accelerationPower = 0.1;
+    this.accelerationPower = 0.08;
 
     this.maxVelocity = utils.getRandomInt(15, 20) / 10;
     this.callbacks = {
@@ -44,6 +45,7 @@ class Car {
       new CarSensor({
         name: 'front',
         car: this,
+        near: CarModel.carSize / 2,
         far: this.getStoppingDistance(this.maxVelocity) + CarModel.carSize + 10
       })
     ];
@@ -181,7 +183,16 @@ class Car {
       return;
     }
 
-    const collidableMeshList = collidableList.map((car) => car.hitboxMesh);
+    const collidableMeshList = collidableList
+      .filter((obj) => {
+        if(obj instanceof TrafficLight && obj.state !== 'red') {
+          return false;
+        }
+
+        return true;
+      })
+      .map((obj) => obj.hitboxMesh);
+
     const collisions = utils.checkCollision(this.hitboxMesh, collidableMeshList);
     if(collisions.length) {
       this.break();
@@ -194,9 +205,39 @@ class Car {
       });
     }
 
+    const sensorCollidableList = collidableList.map((obj) => obj.hitboxMesh);
     this.sensors.forEach((sensor) => {
-      sensor.update(collidableMeshList);
+      sensor.update(sensorCollidableList);
     });
+  }
+
+  setAngleTo(x, y) {
+    const bestAngle = utils.calcAngleDegrees(y, x);
+    if(bestAngle !== this.angle) {
+      this.setAngle(bestAngle);
+    }
+  }
+
+  calculateCarReaction() {
+    const endDistance = this.getLeftDistanceToEnd();
+    const distanceToStop = this.getStoppingDistance(this.velocity);
+    const sensorDistance = this.sensors[0].distance;
+    let sensorOn = false;
+    if(
+      sensorDistance !== null &&
+      sensorDistance <= (distanceToStop + 50) &&
+      sensorDistance > (CarModel.carSize / 2)
+    ) {
+      sensorOn = true;
+    }
+
+    if(endDistance <= distanceToStop || sensorOn) {
+      this.brake();
+    } else if(sensorDistance === distanceToStop) {
+      // this.accelerate();
+    } else {
+      this.accelerate();
+    }
   }
 
   update() {
@@ -218,24 +259,8 @@ class Car {
       return this.nextRoutePoint();
     }
 
-    const bestAngle = utils.calcAngleDegrees(deltaY, deltaX);
-    if(bestAngle !== this.angle) {
-      this.setAngle(bestAngle);
-    }
-
-    const endDistance = this.getLeftDistanceToEnd();
-    const distanceToStop = this.getStoppingDistance(this.velocity);
-    const sensorDistance = this.sensors[0].distance;
-    const sensorOn = sensorDistance !== null && sensorDistance <= (distanceToStop + 50);
-
-    if(endDistance <= distanceToStop || sensorOn) {
-      this.brake();
-    } else if(sensorDistance === distanceToStop) {
-      // this.accelerate();
-    } else {
-      this.accelerate();
-    }
-
+    this.setAngleTo(deltaX, deltaY);
+    this.calculateCarReaction();
     this.calculateNextPosition();
 
     const targetPointDist = Math.sqrt(((targetPoint.x - this.position.x) ** 2) + ((targetPoint.y - this.position.y) ** 2));
