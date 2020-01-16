@@ -1,12 +1,12 @@
-# DarwinCity
+# TrafficSimulator
 
-> An experimental city controlled by AI
+> Simulate a city traffic
 
 In progress...
 
 # Demo
 
-[https://fill-lima.github.io/darwin-city/](https://fill-lima.github.io/darwin-city/)
+[https://fill-lima.github.io/traffic-simulator/](https://fill-lima.github.io/traffic-simulator/)
 
 # Built-with
 - [Three.js](https://threejs.org/)
