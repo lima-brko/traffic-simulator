@@ -20,9 +20,11 @@ class CarSensor {
   constructor(props) {
     this.name = props.name;
     this.car = props.car;
+    this.near = props.near;
     this.far = props.far;
     this.distance = null;
     this.raycaster = new Raycaster();
+    this.raycaster.near = props.near;
     this.raycaster.far = props.far;
 
     this.line = this.createLine();
@@ -31,7 +33,7 @@ class CarSensor {
   createLine() {
     const geometry = new Geometry();
     geometry.vertices.push(
-      new Vector3(0, 0, 6),
+      new Vector3(0, this.near, 6),
       new Vector3(0, this.far, 6)
     );
     const line = new Line(geometry, materials.green);
@@ -46,10 +48,7 @@ class CarSensor {
   }
 
   reset() {
-    if(this.line.material !== materials.green) {
-      this.line.material = materials.green;
-    }
-
+    this.setLineMaterial(materials.green);
     this.distance = null;
   }
 
@@ -73,7 +72,7 @@ class CarSensor {
       this.distance = closestCollision.distance;
       this.setLineMaterial(materials.yellow);
     } else {
-      this.setLineMaterial(materials.green);
+      this.reset();
     }
   }
 }

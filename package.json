@@ -1,7 +1,7 @@
 {
-  "name": "DarwinCity",
+  "name": "TrafficSimulator",
   "version": "1.0.0",
-  "description": "An experimental city controlled by AI",
+  "description": "Simulate a city traffic",
   "main": "src/app.js",
   "scripts": {
     "start": "export NODE_ENV=development && webpack-dev-server",

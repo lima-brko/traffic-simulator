@@ -1,5 +1,6 @@
 import contants from '../helpers/constants';
 import Road from '../components/Road';
+import RoadJunction from '../components/Road/Junction';
 
 const matrixSize = 25;
 const {worldWidth, worldHeight, tileSize} = contants;
@@ -15,6 +16,10 @@ class MatrixTile {
 
   getRoadContents() {
     return this.contents.filter((content) => content instanceof Road);
+  }
+
+  getJunctionContents() {
+    return this.contents.filter((content) => content instanceof RoadJunction);
   }
 }
 
