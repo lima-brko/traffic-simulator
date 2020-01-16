@@ -100,7 +100,7 @@ class Junction {
 
       ctx.fillStyle = '#fff';
       for(let j = 1; j < 13; j += 2) {
-        ctx.fillRect(j * fragmentTileSize, -15, fragmentTileSize, 15);
+        ctx.fillRect(j * fragmentTileSize, -10, fragmentTileSize, 10);
       }
     }
 

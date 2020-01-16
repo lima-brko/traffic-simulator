@@ -8,6 +8,8 @@ class TrafficLightController {
     this.trafficLights = trafficLights;
     this.currentGroupIndex = 0;
     this.groups = {};
+    this.warningTimer = null;
+    this.cycleTimer = null;
 
     this.trafficLights.forEach((trafficLight) => {
       const groupKey = trafficLight.roadPath.name.replace(/[0-9]/g, '');
@@ -35,8 +37,14 @@ class TrafficLightController {
 
     this.groups[groupKeys[this.currentGroupIndex]].forEach((trafficLight) => trafficLight.activate('green'));
 
-    setTimeout(this.warning.bind(this), trafficTimers.cycle - trafficTimers.warning);
-    setTimeout(this.change.bind(this), trafficTimers.cycle);
+    this.warningTimer = setTimeout(this.warning.bind(this), trafficTimers.cycle - trafficTimers.warning);
+    this.cycleTimer = setTimeout(this.change.bind(this), trafficTimers.cycle);
+  }
+
+  destroy() {
+    clearTimeout(this.warningTimer);
+    clearTimeout(this.cycleTimer);
+    this.trafficLights.forEach((trafficLight) => trafficLight.deactivate());
   }
 }
 

@@ -18,7 +18,7 @@ import Road from './Road';
 import WorldMatrix from '../services/WorldMatrix';
 import TrafficLightController from '../services/TrafficLightController';
 import constants from '../helpers/constants';
-// import utils from '../helpers/utils';
+import utils from '../helpers/utils';
 
 class DarwinCity {
   constructor() {
@@ -35,6 +35,7 @@ class DarwinCity {
 
     this.roads = [];
     this.junctions = [];
+    this.trafficLightController = null;
     this.houses = [
       new House({
         width: 30,
@@ -49,6 +50,7 @@ class DarwinCity {
     this.callbacks = {};
 
     this.initilize();
+    this.toggleTrafficSignals = this.toggleTrafficSignals.bind(this);
   }
 
   drawTilesGrid() {
@@ -211,9 +213,11 @@ class DarwinCity {
 
     const freePoints = this.getFreePointsToEnterCar();
     const len = Math.min(freePoints.length, onQueueCars);
+    let randomFreePointIdx;
 
     for(let i = 0; i < len; i++) {
-      this.createRandomCar(freePoints[i], this.cars.length);
+      randomFreePointIdx = utils.getRandomInt(0, freePoints.length);
+      this.createRandomCar(freePoints.splice(randomFreePointIdx, 1)[0], this.cars.length);
     }
   }
 
@@ -256,31 +260,31 @@ class DarwinCity {
       });
     });
 
-    new TrafficLightController(this.trafficLights);
+    this.trafficLightController = new TrafficLightController(this.trafficLights);
   }
 
   initilize() {
     this.drawTilesGrid();
     this.populateRoads();
     this.installTrafficController();
-    this.populateBuildings();
+    // this.populateBuildings();
     this.populateCars();
     this.createGround();
 
     // Center Reference
-    const referenceY = new Mesh(
-      new BoxBufferGeometry(5, 125, 5),
-      new MeshBasicMaterial({color: 0xff0000}),
-    );
-    referenceY.rotation.x = -Math.PI / 2;
-    this.scene.add(referenceY);
+    // const referenceY = new Mesh(
+    //   new BoxBufferGeometry(5, 125, 5),
+    //   new MeshBasicMaterial({color: 0xff0000}),
+    // );
+    // referenceY.rotation.x = -Math.PI / 2;
+    // this.scene.add(referenceY);
 
-    const referenceX = new Mesh(
-      new BoxBufferGeometry(125, 5, 5),
-      new MeshBasicMaterial({color: 0xff0000}),
-    );
-    referenceX.rotation.x = -Math.PI / 2;
-    this.scene.add(referenceX);
+    // const referenceX = new Mesh(
+    //   new BoxBufferGeometry(125, 5, 5),
+    //   new MeshBasicMaterial({color: 0xff0000}),
+    // );
+    // referenceX.rotation.x = -Math.PI / 2;
+    // this.scene.add(referenceX);
   }
 
   getCarCollidableList(car) {
@@ -299,7 +303,7 @@ class DarwinCity {
 
     const carRoadPath = car.route[car.currentRoutePoint];
     const trafficLights = this.trafficLights.filter((trafficLight) => {
-      if(trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green') {
+      if(!trafficLight.active || (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green')) {
         return false;
       }
 
@@ -309,6 +313,16 @@ class DarwinCity {
     });
 
     return [...cars, ...trafficLights];
+  }
+
+  toggleTrafficSignals() {
+    if(!this.trafficLightController) {
+      this.trafficLightController = new TrafficLightController(this.trafficLights);
+      return;
+    }
+
+    this.trafficLightController.destroy();
+    this.trafficLightController = null;
   }
 
   on(eventName, callback) {

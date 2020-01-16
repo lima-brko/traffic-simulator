@@ -46,7 +46,7 @@ class Car {
         name: 'front',
         car: this,
         near: CarModel.carSize / 2,
-        far: this.getStoppingDistance(this.maxVelocity) + CarModel.carSize + 10
+        far: this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 10
       })
     ];
     this.mesh.add(this.sensors[0].line);
@@ -222,16 +222,16 @@ class Car {
     const endDistance = this.getLeftDistanceToEnd();
     const distanceToStop = this.getStoppingDistance(this.velocity);
     const sensorDistance = this.sensors[0].distance;
-    let sensorOn = false;
+    // const carHalfSize = CarModel.carSize / 2;
+
     if(
-      sensorDistance !== null &&
-      sensorDistance <= (distanceToStop + 50) &&
-      sensorDistance > (CarModel.carSize / 2)
+      sensorDistance !== null
     ) {
-      sensorOn = true;
+      this.brake();
+      return;
     }
 
-    if(endDistance <= distanceToStop || sensorOn) {
+    if(endDistance <= distanceToStop) {
       this.brake();
     } else if(sensorDistance === distanceToStop) {
       // this.accelerate();

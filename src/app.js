@@ -12,6 +12,7 @@ import './styles/app.scss';
 // Display elements
 const carAccidentCount = document.getElementById('car_accident_count');
 const carArrivalCount = document.getElementById('car_arrival_count');
+const btnToggleTrafficSignals = document.getElementById('btn_toggle_traffic_signals');
 
 // City initialization
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 100, 5000);
@@ -40,3 +41,11 @@ document.querySelector('#scene').appendChild(renderer.domElement);
   renderer.render(DarwinCity.scene, camera);
   requestAnimationFrame(animate);
 }());
+
+// Events
+function onToggleTrafficSignals() {
+  btnToggleTrafficSignals.textContent = `${!DarwinCity.trafficLightController ? 'Deactivate' : 'Activate'} Traffic Signals`;
+  DarwinCity.toggleTrafficSignals();
+}
+
+btnToggleTrafficSignals.addEventListener('click', onToggleTrafficSignals);

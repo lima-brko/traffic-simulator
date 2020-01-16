@@ -20,6 +20,7 @@ class TrafficLight {
     this.junction = props.junction;
     this.roadPath = props.roadPath;
 
+    this.active = false;
     this.state = 'deactivate';
     this.lightsMesh = {};
     this.hitboxMesh = null;
@@ -36,7 +37,14 @@ class TrafficLight {
     }
   }
 
+  deactivate() {
+    this.active = false;
+    this.state = 'deactivate';
+    this.updateMeshs();
+  }
+
   activate(state) {
+    this.active = true;
     this.state = state;
     this.updateMeshs();
   }
