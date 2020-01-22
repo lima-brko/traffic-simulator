@@ -1,6 +1,82 @@
 import {Raycaster} from 'three';
 
 const utils = {
+
+  getPointOnLine(pointX, pointY, lStartX, lStartY, lEndX, lEndY) {
+    const atob = {x: lEndX - lStartX, y: lEndY - lStartY};
+    const atop = {x: pointX - lStartX, y: pointY - lStartY};
+    const len = atop.x * atop.x + atob.y * atob.y;
+    let dot = atop.x * atop.x + atop.y * atob.y;
+    const t = Math.min(1, Math.max(0, dot / len));
+
+    dot = (lEndX - lStartX) * (pointY - lStartY) - (lEndY - lStartY) * (pointX - lStartX);
+
+    return {
+      point: {
+        x: lStartX + atop.x * t,
+        y: lStartY + atob.y * t
+      },
+      left: dot < 1,
+      dot,
+      t
+    };
+  },
+
+  /**
+   * Get intersection point between two lines
+   * @param {number} l1StartX
+   * @param {number} l1StartY
+   * @param {number} l1EndX
+   * @param {number} l1EndY
+   * @param {number} l2StartX
+   * @param {number} l2StartY
+   * @param {number} l2EndX
+   * @param {number} l2EndY
+   * @returns {{x: number, y: number, onLine1: boolean, onLine2: boolean} || null}
+   */
+  getLinesIntersection(l1StartX, l1StartY, l1EndX, l1EndY, l2StartX, l2StartY, l2EndX, l2EndY) {
+    const denominator = ((l2EndY - l2StartY) * (l1EndX - l1StartX)) - ((l2EndX - l2StartX) * (l1EndY - l1StartY));
+
+    if(denominator === 0) {
+      return null;
+    }
+
+    const result = {
+      x: null,
+      y: null,
+      onLine1: false,
+      onLine2: false
+    };
+    let a = l1StartY - l2StartY;
+    let b = l1StartX - l2StartX;
+
+    const numerator1 = ((l2EndX - l2StartX) * a) - ((l2EndY - l2StartY) * b);
+    const numerator2 = ((l1EndX - l1StartX) * a) - ((l1EndY - l1StartY) * b);
+    a = numerator1 / denominator;
+    b = numerator2 / denominator;
+
+    // if we cast these lines infinitely in both directions, they intersect here:
+    result.x = l1StartX + (a * (l1EndX - l1StartX));
+    result.y = l1StartY + (a * (l1EndY - l1StartY));
+
+    /**
+     * it is worth noting that this should be the same as:
+     * x = l2StartX + (b * (l2EndX - l2StartX));
+     * y = l2StartX + (b * (l2EndY - l2StartY));
+     */
+    // if l1 is a segment and l2 is infinite, they intersect if:
+    if(a > 0 && a < 1) {
+      result.onLine1 = true;
+    }
+
+    // if l2 is a segment and l1 is infinite, they intersect if:
+    if(b > 0 && b < 1) {
+      result.onLine2 = true;
+    }
+
+    // if l1 and l2 are segments, they intersect if both of the above are true
+    return result;
+  },
   roundNumber(number, decimals) {
     const newnumber = Number(`${number}`).toFixed(parseInt(decimals, 10));
     return parseFloat(newnumber);
@@ -43,7 +119,7 @@ const utils = {
     const deltaY = y2 - y1;
     const deltaX = x2 - x1;
     const angleBetween = Math.atan2(deltaY, deltaX);
-    const distance = Math.hypot(x2 - x1, y2 - y1);
+    const distance = Math.hypot(deltaX, deltaY);
     const x = x2 + (distance * Math.cos(angleBetween + angle));
     const y = y2 + (distance * Math.sin(angleBetween + angle));
     return [x, y];

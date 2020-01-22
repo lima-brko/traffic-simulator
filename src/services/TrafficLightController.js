@@ -11,6 +11,10 @@ class TrafficLightController {
     this.warningTimer = null;
     this.cycleTimer = null;
 
+    if(!this.trafficLights.length) {
+      return;
+    }
+
     this.trafficLights.forEach((trafficLight) => {
       const groupKey = trafficLight.roadPath.name.replace(/[0-9]/g, '');
       if(!this.groups[groupKey]) {

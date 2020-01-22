@@ -1,7 +1,7 @@
 import {Vector3} from 'three';
 import utils from '../../helpers/utils';
 
-class RoadPoint {
+class RoadPathNode {
   constructor(props) {
     this.x = props.x;
     this.y = props.y;
@@ -25,12 +25,16 @@ class RoadPoint {
     return move(this, []);
   }
 
+  getBefore() {
+    return this.roadPath.find((point) => point.nextPoints.indexOf(this) !== -1);
+  }
+
   addBefore(anotherPoint) {
     if(!this.roadPath) {
       return;
     }
 
-    const prevPoint = this.roadPath.find((point) => point.nextPoints.indexOf(this) !== -1);
+    const prevPoint = this.getBefore();
     anotherPoint.addNextPoint(this);
     prevPoint.removeNextPoint(this);
     prevPoint.addNextPoint(anotherPoint);
@@ -51,4 +55,4 @@ class RoadPoint {
   }
 }
 
-export default RoadPoint;
+export default RoadPathNode;

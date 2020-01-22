@@ -59,16 +59,23 @@ class RoadPath {
     return this.find((point) => point.nextPoints.length === 0);
   }
 
-  getPointInsideTile(tile) {
-    const halfTileSize = constants.tileSize / 2;
+  getClosestPoint(x, y) {
+    let closestPoint = null;
+    let minDist = null;
+    let dist;
 
-    return this.find((point) => {
-      if(point.x > (tile.sceneX - halfTileSize) && point.x < (tile.sceneX + halfTileSize) && point.y > (tile.sceneY - halfTileSize) && point.y < (tile.sceneY + halfTileSize)) {
-        return true;
+    this.find((point) => {
+      dist = Math.sqrt(((x - point.x) ** 2) + ((y - point.y) ** 2));
+
+      if(!closestPoint || dist < minDist) {
+        minDist = dist;
+        closestPoint = point;
       }
 
       return false;
     });
+
+    return closestPoint;
   }
 
   getPathToAnyEndPoint() {
