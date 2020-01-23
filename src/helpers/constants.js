@@ -1,8 +1,12 @@
+const tileSize = 50;
+
 export default {
-  tileSize: 50,
+  tileSize,
+  halfTileSize: tileSize / 2,
+  quarterTileSize: tileSize / 4,
   worldWidth: 1250,
   worldHeight: 1250,
-  carTotal: 4,
+  carTotal: 40,
   roadsTotal: 2,
   colors: {
     road: '#989899'

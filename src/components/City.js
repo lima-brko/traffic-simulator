@@ -109,7 +109,7 @@ class DarwinCity {
     }
 
     this.roads.forEach((road) => road.drawOnCanvas(ctx));
-    // this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
+    this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
   }
 
   createCarRouteTrace(car) {

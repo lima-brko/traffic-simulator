@@ -3,8 +3,8 @@ import utils from '../../helpers/utils';
 
 class RoadPathNode {
   constructor(props) {
-    this.x = props.x;
-    this.y = props.y;
+    this.x = parseInt(props.x, 10);
+    this.y = parseInt(props.y, 10);
     this.vector3 = new Vector3(this.x, 0, this.y);
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;

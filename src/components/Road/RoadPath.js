@@ -1,6 +1,6 @@
 import contants from '../../helpers/constants';
 import utils from '../../helpers/utils';
-import constants from '../../helpers/constants';
+import RoadPathNode from './RoadPathNode';
 
 const colors = {
   ways: {
@@ -29,6 +29,12 @@ class RoadPath {
     deepPoint.addNextPoint(point);
   }
 
+  getAngle() {
+    const x = this.initPoint.nextPoints[0].x - this.initPoint.x;
+    const y = this.initPoint.nextPoints[0].y - this.initPoint.y;
+    return utils.calcAngleDegrees(x, y);
+  }
+
   find(condition) {
     function compare(point) {
       if(condition(point)) {
@@ -53,6 +59,65 @@ class RoadPath {
     }
 
     return compare(this.initPoint);
+  }
+
+  createNodeOnLineIntersect(line) {
+    function find(node) {
+      if(!node.nextPoints.length) {
+        return null;
+      }
+
+      const intersection = utils.getLinesIntersection(
+        node.x,
+        node.y,
+        node.nextPoints[0].x,
+        node.nextPoints[0].y,
+        line[0].x,
+        line[0].y,
+        line[1].x,
+        line[1].y,
+        true
+      );
+
+      if(!intersection || !intersection.onLine1) {
+        return find(node.nextPoints[0]);
+      }
+
+      return {
+        intersection,
+        node1: node,
+        node2: node.nextPoints[0]
+      };
+    }
+
+    const intersectionData = find(this.initPoint);
+
+    if(!intersectionData) {
+      return null;
+    }
+
+    if(
+      intersectionData.intersection.x === intersectionData.node1.x &&
+      intersectionData.intersection.y === intersectionData.node1.y
+    ) {
+      return intersectionData.node1;
+    }
+
+    if(
+      intersectionData.intersection.x === intersectionData.node2.x &&
+      intersectionData.intersection.y === intersectionData.node2.y
+    ) {
+      return intersectionData.node2;
+    }
+
+    const newPoint = new RoadPathNode({
+      x: intersectionData.intersection.x,
+      y: intersectionData.intersection.y,
+      roadPath: this
+    });
+
+    intersectionData.node2.addBefore(newPoint);
+    return newPoint;
   }
 
   getDeepestPoint() {

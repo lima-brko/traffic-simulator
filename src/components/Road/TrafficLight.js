@@ -5,6 +5,7 @@ import {
   BoxBufferGeometry,
   PlaneBufferGeometry
 } from 'three';
+import utils from '../../helpers/utils';
 import constants from '../../helpers/constants';
 
 const metalMaterial = new MeshBasicMaterial({color: '#222', flatShading: true});
@@ -18,13 +19,18 @@ const lightMaterials = {
 class TrafficLight {
   constructor(props) {
     this.junction = props.junction;
-    this.roadPath = props.roadPath;
+    this.roadPaths = props.roadPaths;
+    this.x = props.x;
+    this.y = props.y;
 
     this.active = false;
     this.state = 'deactivate';
     this.lightsMesh = {};
     this.hitboxMesh = null;
     this.mesh = this.createMesh();
+
+    this.mesh.position.set(this.x, 0, this.y);
+    this.mesh.rotation.y = utils.angleToRadians((this.roadPaths[0].getAngle() * -1) - 90);
   }
 
   updateMeshs() {
@@ -55,13 +61,14 @@ class TrafficLight {
     // Wall
     const halfTileSize = constants.tileSize / 2;
     const wall = new Mesh(
-      new PlaneBufferGeometry(halfTileSize, halfTileSize),
+      new PlaneBufferGeometry(halfTileSize * this.roadPaths.length, halfTileSize),
       new MeshBasicMaterial({
         opacity: 0,
         transparent: true
       })
     );
 
+    wall.position.x = -(halfTileSize * this.roadPaths.length) / 2;
     wall.position.y = halfTileSize / 2;
     wall.name = 'traffic_light_hitbox';
     this.hitboxMesh = wall;
@@ -73,7 +80,7 @@ class TrafficLight {
       metalMaterial
     );
 
-    support1.position.x = 6;
+    support1.position.x = -4.5;
     support1.position.y = 26;
     tfGroup.add(support1);
 
@@ -82,7 +89,7 @@ class TrafficLight {
       metalMaterial
     );
 
-    support2.position.x = 13.5;
+    support2.position.x = 3;
     support2.position.y = 13;
     tfGroup.add(support2);
 
@@ -91,7 +98,7 @@ class TrafficLight {
       new BoxBufferGeometry(14, 4, 3),
       metalMaterial
     );
-    box.position.x = 4;
+    box.position.x = -11;
     box.position.y = 26;
     tfGroup.add(box);
 
@@ -104,7 +111,7 @@ class TrafficLight {
 
       light.position.y = 26;
       light.position.z = 1;
-      light.position.x = i * 4;
+      light.position.x = -13 + (i * 4);
       this.lightsMesh[state] = light;
       tfGroup.add(light);
     });

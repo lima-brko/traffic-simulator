@@ -84,6 +84,12 @@ class Road {
     }
   }
 
+  getAngle() {
+    const x = this.nodes[1].x - this.nodes[0].x;
+    const y = this.nodes[1].y - this.nodes[0].y;
+    return utils.calcAngleDegrees(x, y);
+  }
+
   getTotalLanes() {
     let lanesCount = 0;
 
@@ -161,9 +167,9 @@ class Road {
     ctx.resetTransform();
 
     // RoadPath
-    this.getRoadPaths().forEach((roadPath) => {
-      RoadPath.drawOnCanvas(ctx, roadPath);
-    });
+    // this.getRoadPaths().forEach((roadPath) => {
+    //   RoadPath.drawOnCanvas(ctx, roadPath);
+    // });
   }
 
   findClosestPoint(x, y) {

@@ -16,7 +16,7 @@ class TrafficLightController {
     }
 
     this.trafficLights.forEach((trafficLight) => {
-      const groupKey = trafficLight.roadPath.name.replace(/[0-9]/g, '');
+      const groupKey = trafficLight.roadPaths[0].name.replace(/[0-9]/g, '');
       if(!this.groups[groupKey]) {
         this.groups[groupKey] = [];
       }

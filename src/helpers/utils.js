@@ -2,6 +2,15 @@ import {Raycaster} from 'three';
 
 const utils = {
 
+  /**
+   * Get the closest intersection of a point in a line
+   * @param {number} pointX
+   * @param {number} pointY
+   * @param {number} lStartX
+   * @param {number} lStartY
+   * @param {number} lEndX
+   * @param {number} lEndY
+   */
   getPointOnLine(pointX, pointY, lStartX, lStartY, lEndX, lEndY) {
     const atob = {x: lEndX - lStartX, y: lEndY - lStartY};
     const atop = {x: pointX - lStartX, y: pointY - lStartY};
@@ -32,9 +41,10 @@ const utils = {
    * @param {number} l2StartY
    * @param {number} l2EndX
    * @param {number} l2EndY
+   * @param {boolean} [edgeCheck]
    * @returns {{x: number, y: number, onLine1: boolean, onLine2: boolean} || null}
    */
-  getLinesIntersection(l1StartX, l1StartY, l1EndX, l1EndY, l2StartX, l2StartY, l2EndX, l2EndY) {
+  getLinesIntersection(l1StartX, l1StartY, l1EndX, l1EndY, l2StartX, l2StartY, l2EndX, l2EndY, edgeCheck = false) {
     const denominator = ((l2EndY - l2StartY) * (l1EndX - l1StartX)) - ((l2EndX - l2StartX) * (l1EndY - l1StartY));
 
     if(denominator === 0) {
@@ -59,19 +69,24 @@ const utils = {
     result.x = l1StartX + (a * (l1EndX - l1StartX));
     result.y = l1StartY + (a * (l1EndY - l1StartY));
 
-    /**
-     * it is worth noting that this should be the same as:
-     * x = l2StartX + (b * (l2EndX - l2StartX));
-     * y = l2StartX + (b * (l2EndY - l2StartY));
-     */
-    // if l1 is a segment and l2 is infinite, they intersect if:
-    if(a > 0 && a < 1) {
-      result.onLine1 = true;
-    }
+    if(edgeCheck) {
+      // if l1 is a segment and l2 is infinite, they intersect if:
+      if(a >= 0 && a <= 1) {
+        result.onLine1 = true;
+      }
 
-    // if l2 is a segment and l1 is infinite, they intersect if:
-    if(b > 0 && b < 1) {
-      result.onLine2 = true;
+      // if l2 is a segment and l1 is infinite, they intersect if:
+      if(b >= 0 && b <= 1) {
+        result.onLine2 = true;
+      }
+    } else {
+      if(a > 0 && a < 1) {
+        result.onLine1 = true;
+      }
+
+      if(b > 0 && b < 1) {
+        result.onLine2 = true;
+      }
     }
 
     // if l1 and l2 are segments, they intersect if both of the above are true
