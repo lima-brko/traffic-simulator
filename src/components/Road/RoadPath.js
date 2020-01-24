@@ -1,6 +1,7 @@
 import contants from '../../helpers/constants';
 import utils from '../../helpers/utils';
 import RoadPathNode from './RoadPathNode';
+import constants from '../../helpers/constants';
 
 const colors = {
   ways: {
@@ -13,6 +14,7 @@ class RoadPath {
   constructor(props) {
     this.name = props.name;
     this.way = props.way;
+    this.order = props.order;
     this.road = props.road;
     this.initPoint = null;
   }
@@ -173,13 +175,12 @@ class RoadPath {
     this.points.splice(index, 0, point);
   }
 
-  static drawOnCanvas(ctx, roadPath) {
-    const firstPoint = roadPath.initPoint;
+  drawDetailsOnCanvas(ctx) {
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
     // Lines
     ctx.beginPath();
-    ctx.strokeStyle = colors.ways[roadPath.way];
+    ctx.strokeStyle = colors.ways[this.way];
 
     function drawLines(point) {
       point.nextPoints.forEach((nextPoint) => {
@@ -193,14 +194,14 @@ class RoadPath {
         drawLines(nextPoint);
       });
     }
-    drawLines(firstPoint);
+    drawLines(this.initPoint);
 
     ctx.stroke();
     ctx.closePath();
 
     // Arrows
-    const x = roadPath.initPoint.nextPoints[0].x - roadPath.initPoint.x;
-    const y = roadPath.initPoint.nextPoints[0].y - roadPath.initPoint.y;
+    const x = this.initPoint.nextPoints[0].x - this.initPoint.x;
+    const y = this.initPoint.nextPoints[0].y - this.initPoint.y;
     const angle = utils.calcAngleDegrees(x, y);
 
     let edgeX;
@@ -212,7 +213,7 @@ class RoadPath {
       }
 
       ctx.beginPath();
-      ctx.fillStyle = colors.ways[roadPath.way];
+      ctx.fillStyle = colors.ways[this.way];
       edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       ctx.moveTo(edgeX, edgeY);
@@ -234,13 +235,49 @@ class RoadPath {
         drawArrows(nextPoint);
       });
     }
-    drawArrows(firstPoint);
+    drawArrows(this.initPoint);
 
     // Texts
     ctx.textAlign = 'center';
     ctx.font = '11px Verdana';
     ctx.fillStyle = '#000';
-    ctx.fillText(roadPath.name, firstPoint.x, firstPoint.y + 10);
+    ctx.fillText(this.name, this.initPoint.x, this.initPoint.y + 10);
+    ctx.resetTransform();
+  }
+
+  drawOnCanvas(ctx) {
+    if(this.order === 0) {
+      return;
+    }
+
+    const angle = this.getAngle();
+    const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
+    const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize * -1;
+
+    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+
+    // Road lane dashed line
+    ctx.beginPath();
+    function moveLine(point) {
+      ctx.lineTo(point.x + angleModX, point.y + angleModY);
+
+      if(!point.nextPoints.length) {
+        return false;
+      }
+
+      return moveLine(point.nextPoints[0]);
+    }
+
+    ctx.moveTo(this.initPoint.x + angleModX, this.initPoint.y + angleModY);
+    moveLine(this.initPoint.nextPoints[0]);
+
+    ctx.lineWidth = 1;
+    ctx.setLineDash([10, 15]);
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.closePath();
+    ctx.setLineDash([]);
+
     ctx.resetTransform();
   }
 }

@@ -90,7 +90,7 @@ class DarwinCity {
           new RoadNode({x: firstTile.sceneX, y: firstTile.sceneY}),
           new RoadNode({x: lastTile.sceneX, y: lastTile.sceneY})
         ],
-        roadLanes: 2
+        roadLanes: constants.roadLanes
       });
 
       // tiles.forEach((tile) => {
@@ -149,13 +149,16 @@ class DarwinCity {
 
   createRandomCar(point, index) {
     const routePath = point.generatePathToAnyEndPoint();
+    const diffX = routePath[1].x - routePath[0].x;
+    const diffY = routePath[1].y - routePath[0].y;
+    const angle = utils.calcAngleDegrees(diffY, diffX);
 
     const car = new Car({
       position: {
         x: routePath[0].x,
         y: routePath[0].y
       },
-      angle: 180
+      angle
     });
     car.setRoute(routePath, {onArrival: this.onCarArrival.bind(this), onBrake: this.onCarBrake.bind(this)});
     // this.createCarRouteTrace(car);

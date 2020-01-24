@@ -42,6 +42,7 @@ class Road {
     for(let i = 0; i < this.roadLanes; i++) {
       const roadPath = new RoadPath({
         name: `${this.name}-${way}-${i}`,
+        order: i,
         way,
         road: this
       });
@@ -116,37 +117,44 @@ class Road {
 
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
-    // Road
     const diffX = lastNode.x - firstNode.x;
     const diffY = lastNode.y - firstNode.y;
     const angle = utils.calcAngleDegrees(diffX, diffY);
-
-    ctx.beginPath();
-    ctx.lineWidth = halfTileSize * this.getTotalLanes();
-    ctx.strokeStyle = constants.colors.road;
-    this.nodes.forEach((node, i) => {
+    const nodesPos = this.nodes.map((node, i) => {
       const {x} = node;
       const {y} = node;
 
       if(i === 0) {
-        ctx.moveTo(
-          x - Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 2),
-          y - Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 2)
-        );
-        return;
+        return {
+          x: x - Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 2),
+          y: y - Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 2)
+        };
       }
 
       if(i === this.nodes.length - 1) {
-        ctx.lineTo(
-          x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 2),
-          y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 2)
-        );
+        return {
+          x: x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 2),
+          y: y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 2)
+        };
+      }
+
+      return {x, y};
+    });
+
+    // Road cement
+    ctx.beginPath();
+    nodesPos.forEach((node, i) => {
+      if(i === 0) {
+        ctx.moveTo(node.x, node.y);
         return;
       }
 
-      ctx.lineTo(x, y);
+      ctx.lineTo(node.x, node.y);
     });
+    ctx.lineWidth = halfTileSize * this.getTotalLanes();
+    ctx.strokeStyle = constants.colors.road;
     ctx.stroke();
+    ctx.closePath();
 
     // Road Name
     ctx.textAlign = 'center';
@@ -154,22 +162,27 @@ class Road {
     ctx.fillStyle = '#fff';
     ctx.fillText(this.name, firstNode.x, firstNode.y);
 
-    // Road lane dashed line
-    ctx.strokeStyle = '#fff';
+    // Road center line
     ctx.beginPath();
-    ctx.lineWidth = 1;
-    ctx.setLineDash([10, 15]);
-    ctx.moveTo(constants.tileSize * firstNode.x, constants.tileSize * firstNode.y);
-    ctx.lineTo(constants.tileSize * lastNode.x, constants.tileSize * lastNode.y);
-    ctx.stroke();
+    nodesPos.forEach((node, i) => {
+      if(i === 0) {
+        ctx.moveTo(node.x, node.y);
+        return;
+      }
 
-    ctx.setLineDash([]);
+      ctx.lineTo(node.x, node.y);
+    });
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#d9cd19';
+    ctx.stroke();
+    ctx.closePath();
+
     ctx.resetTransform();
 
     // RoadPath
-    // this.getRoadPaths().forEach((roadPath) => {
-    //   RoadPath.drawOnCanvas(ctx, roadPath);
-    // });
+    this.getRoadPaths().forEach((roadPath) => {
+      roadPath.drawOnCanvas(ctx);
+    });
   }
 
   findClosestPoint(x, y) {
