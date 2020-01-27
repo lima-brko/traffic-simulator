@@ -12,20 +12,20 @@ class Junction {
     this.trafficLights = [];
 
     this.roads.forEach((road, i) => {
-      Object.keys(road.ways).forEach((way) => {
+      road.ways.forEach((way) => {
         const oppositeRoad = roads[i === 0 ? 1 : 0];
 
-        Junction.createLeftCurve(road, oppositeRoad, road.ways[way][0]);
-        Junction.createRightCurve(road, oppositeRoad, road.ways[way][road.ways[way].length - 1]);
+        Junction.createLeftCurve(road, oppositeRoad, way.lanes[0]);
+        Junction.createRightCurve(road, oppositeRoad, way.lanes[way.lanes.length - 1]);
         this.createTrafficLight(road, oppositeRoad, way);
       });
     });
   }
 
   createTrafficLight(road, oppositeRoad, way) {
-    const roadThick = road.ways.even.length * constants.halfTileSize;
-    const oppositeRoadThick = oppositeRoad.ways.even.length * constants.halfTileSize;
-    const firstRoadPath = road.ways[way][0];
+    const roadThick = road.getWay('even').lanes.length * constants.halfTileSize;
+    const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
+    const firstRoadPath = way.lanes[0];
     const roadPathAngle = firstRoadPath.getAngle();
 
     const seg1 = {
@@ -41,15 +41,15 @@ class Junction {
       junction: this,
       x: seg2.x,
       y: seg2.y,
-      roadPaths: road.ways[way]
+      roadPaths: way.lanes
     });
 
     this.trafficLights.push(trafficLight);
   }
 
   static createLeftCurve(road, oppositeRoad, roadPath) {
-    const roadThick = road.ways.even.length * constants.halfTileSize;
-    const oppositeRoadThick = oppositeRoad.ways.even.length * constants.halfTileSize;
+    const roadThick = road.getWay('even').lanes.length * constants.halfTileSize;
+    const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
     const roadPathAngle = roadPath.getAngle();
 
     const oppositeRoadLine = [
@@ -86,7 +86,7 @@ class Junction {
   }
 
   static createRightCurve(road, oppositeRoad, roadPath) {
-    const oppositeRoadThick = oppositeRoad.ways.even.length * constants.halfTileSize;
+    const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
     const roadPathAngle = roadPath.getAngle();
 
     const oppositeRoadLine = [
@@ -116,27 +116,27 @@ class Junction {
 
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
-    const x = this.x - (this.roads[1].ways.even.length * halfTileSize);
-    const y = this.y - (this.roads[0].ways.even.length * halfTileSize);
+    const x = this.x - (this.roads[1].getWay('even').lanes.length * halfTileSize);
+    const y = this.y - (this.roads[0].getWay('even').lanes.length * halfTileSize);
 
     ctx.fillStyle = constants.colors.road;
-    ctx.fillRect(x, y, this.roads[1].ways.even.length * constants.tileSize, this.roads[0].ways.even.length * constants.tileSize);
+    ctx.fillRect(x, y, this.roads[1].getWay('even').lanes.length * constants.tileSize, this.roads[0].getWay('even').lanes.length * constants.tileSize);
 
     ctx.translate(x, y);
 
     for(let i = 0; i < 4; i++) {
       if(i !== 0) {
-        ctx.translate(this.roads[i % 2].ways.even.length * constants.tileSize, 0);
+        ctx.translate(this.roads[i % 2].getWay('even').lanes.length * constants.tileSize, 0);
         ctx.rotate(utils.angleToRadians(90));
       }
 
       ctx.fillStyle = constants.colors.road;
-      ctx.fillRect(0, -15, this.roads[i % 2].ways.even.length * constants.tileSize, 15);
+      ctx.fillRect(0, -15, this.roads[i % 2].getWay('even').lanes.length * constants.tileSize, 15);
 
       ctx.fillStyle = '#fff';
 
-      const whiteLinesCount = (12 * this.roads[i % 2].ways.even.length) + 1;
-      const fragmentTileSize = (constants.tileSize * this.roads[i % 2].ways.even.length) / whiteLinesCount;
+      const whiteLinesCount = (12 * this.roads[i % 2].getWay('even').lanes.length) + 1;
+      const fragmentTileSize = (constants.tileSize * this.roads[i % 2].getWay('even').lanes.length) / whiteLinesCount;
       for(let j = 1; j < whiteLinesCount; j += 2) {
         ctx.fillRect(j * fragmentTileSize, -10, fragmentTileSize, 10);
       }

@@ -180,7 +180,7 @@ class RoadPath {
 
     // Lines
     ctx.beginPath();
-    ctx.strokeStyle = colors.ways[this.way];
+    ctx.strokeStyle = colors.ways[this.way.type];
 
     function drawLines(point) {
       point.nextPoints.forEach((nextPoint) => {
@@ -213,7 +213,7 @@ class RoadPath {
       }
 
       ctx.beginPath();
-      ctx.fillStyle = colors.ways[this.way];
+      ctx.fillStyle = colors.ways[this.way.type];
       edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       ctx.moveTo(edgeX, edgeY);

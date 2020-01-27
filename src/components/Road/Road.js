@@ -1,5 +1,6 @@
 import contants from '../../helpers/constants';
 import utils from '../../helpers/utils';
+import RoadWay from './RoadWay';
 import RoadPath from './RoadPath';
 import RoadPathNode from './RoadPathNode';
 import Junction from './Junction';
@@ -10,15 +11,18 @@ class Road {
     this.name = props.name;
     this.nodes = props.nodes;
     this.roadLanes = props.roadLanes || 1;
-    this.ways = {even: [], odd: []};
+    this.ways = [
+      new RoadWay({type: 'even'}),
+      new RoadWay({type: 'odd'})
+    ];
 
-    Object.keys(this.ways).forEach(this.createWayRoadPaths.bind(this));
+    this.ways.forEach(this.createWayRoadPaths.bind(this));
   }
 
   getRoadPaths() {
     const roadPaths = [];
-    Object.keys(this.ways).forEach((way) => {
-      this.ways[way].forEach((roadPath) => {
+    this.ways.forEach((way) => {
+      way.lanes.forEach((roadPath) => {
         roadPaths.push(roadPath);
       });
     });
@@ -26,7 +30,7 @@ class Road {
   }
 
   createWayRoadPaths(way) {
-    if(way === 'odd') {
+    if(way.type === 'odd') {
       this.nodes.reverse();
     }
 
@@ -41,7 +45,7 @@ class Road {
 
     for(let i = 0; i < this.roadLanes; i++) {
       const roadPath = new RoadPath({
-        name: `${this.name}-${way}-${i}`,
+        name: `${this.name}-${way.type}-${i}`,
         order: i,
         way,
         road: this
@@ -77,12 +81,16 @@ class Road {
 
       roadPath.addPoint(lastNode);
 
-      this.ways[way].push(roadPath);
+      way.lanes.push(roadPath);
     }
 
-    if(way === 'odd') {
+    if(way.type === 'odd') {
       this.nodes.reverse();
     }
+  }
+
+  getWay(type) {
+    return this.ways.find((way) => way.type === type);
   }
 
   getAngle() {
