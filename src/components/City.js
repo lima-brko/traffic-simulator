@@ -151,16 +151,13 @@ class DarwinCity {
 
   createRandomCar(startPoint, endPoint, index) {
     const routePath = Navigation.findBestRoute(startPoint, endPoint);
-    const diffX = routePath[1].x - routePath[0].x;
-    const diffY = routePath[1].y - routePath[0].y;
-    const angle = utils.calcAngleDegrees(diffY, diffX);
 
     const car = new Car({
       position: {
         x: routePath[0].x,
         y: routePath[0].y
       },
-      angle
+      angle: routePath[0].roadPath.getAngle()
     });
     car.setRoute(routePath, {onArrival: this.onCarArrival.bind(this), onBrake: this.onCarBrake.bind(this)});
     // this.createCarRouteTrace(car);
@@ -317,7 +314,7 @@ class DarwinCity {
       return dist < dangerZoneRadius;
     });
 
-    const carRoadPath = car.route[car.currentRoutePoint];
+    const carRoadPath = car.currentRoadPath;
     const trafficLights = this.trafficLights.filter((trafficLight) => {
       if(!trafficLight.active || (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green')) {
         return false;

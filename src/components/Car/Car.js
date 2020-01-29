@@ -29,7 +29,11 @@ class Car {
     this.setAngle(angle);
 
     this.navigation = Navigation;
-    this.currentRoutePoint = null;
+    this.currentRouteTargetIdx = null;
+    this.currentRouteTargetNode = null;
+    this.currentRoadPath = null;
+    this.currentTargetNode = null;
+    this.changingLane = false;
 
     this.velocity = 0;
     this.brakePower = 0.08;
@@ -53,9 +57,9 @@ class Car {
   }
 
   getLeftDistanceToEnd() {
-    let leftDistance = this.mesh.position.distanceTo(this.route[this.currentRoutePoint].vector3);
+    let leftDistance = this.mesh.position.distanceTo(this.route[this.currentRouteTargetIdx].vector3);
 
-    for(let i = this.currentRoutePoint + 1; i < this.route.length; i++) {
+    for(let i = this.currentRouteTargetIdx + 1; i < this.route.length; i++) {
       leftDistance += this.route[i - 1].vector3.distanceTo(this.route[i].vector3);
     }
 
@@ -93,7 +97,9 @@ class Car {
   setRoute(routePath, callbacks) {
     // const routeTiles = this.navigation.findBestRoute(fromTile, toTile);
     this.route = routePath;
-    this.currentRoutePoint = 0;
+    this.currentRouteTargetIdx = 0;
+    this.currentRoadPath = this.route[this.currentRouteTargetIdx].roadPath;
+    this.currentTargetNode = this.route[this.currentRouteTargetIdx];
     this.callbacks.onArrival = callbacks.onArrival;
     this.callbacks.onBrake = callbacks.onBrake;
   }
@@ -118,19 +124,37 @@ class Car {
     this.velocity = nextVelocity;
   }
 
-  // turnLeft() {
+  nextTargetNode() {
+    const targetRouteNode = this.route[this.currentRouteTargetIdx];
+    const routeNodeIdx = this.currentTargetNode.nextPoints.indexOf(targetRouteNode);
 
-  // }
+    if(routeNodeIdx !== -1) {
+      this.currentTargetNode = targetRouteNode;
+      return;
+    }
 
-  nextRoutePoint() {
-    if(this.route[this.currentRoutePoint + 1]) {
-      this.currentRoutePoint++;
-    } else {
-      this.currentRoutePoint = null;
+    // eslint-disable-next-line prefer-destructuring
+    this.currentTargetNode = this.currentTargetNode.nextPoints[0];
+  }
+
+  nextRouteNode() {
+    const nextRouteNode = this.route[this.currentRouteTargetIdx + 1];
+
+    if(!nextRouteNode) {
+      this.currentRouteTargetIdx = null;
+      this.currentTargetNode = null;
+      this.currentRoadPath = null;
+      this.currentTargetNode = null;
       setTimeout(() => {
         this.callbacks.onArrival(this);
       });
+      return false;
     }
+
+    this.currentRouteTargetIdx++;
+    this.currentRoadPath = this.route[this.currentRouteTargetIdx].roadPath;
+    this.nextTargetNode();
+    return true;
   }
 
   break() {
@@ -211,10 +235,41 @@ class Car {
     });
   }
 
-  setAngleTo(x, y) {
-    const bestAngle = utils.calcAngleDegrees(y, x);
+  setAngleTo(targetX, targetY) {
+    const {x, y} = this.position;
+
+    const deltaX = utils.roundNumber(targetX - x, 1);
+    const deltaY = utils.roundNumber((targetY - y) * -1, 1);
+
+    const bestAngle = utils.calcAngleDegrees(deltaY, deltaX);
+
     if(bestAngle !== this.angle) {
       this.setAngle(bestAngle);
+    }
+  }
+
+  calculateCarHandling() {
+    if(this.changingLane) {
+      const targetRoadPath = this.currentTargetNode.roadPath;
+      const targetDeepestNode = targetRoadPath.getDeepestPoint();
+      const pointOnlineData = utils.getPointOnLine(
+        this.position.x,
+        this.position.y,
+        targetRoadPath.initPoint.x,
+        targetRoadPath.initPoint.y,
+        targetDeepestNode.x,
+        targetDeepestNode.y
+      );
+
+      const dist = utils.getDistance(pointOnlineData.point.x, pointOnlineData.point.y, this.position.x, this.position.y);
+      if(dist < 5) {
+        this.currentRoadPath = this.currentTargetNode.roadPath;
+        this.changingLane = false;
+      }
+    } else if(!this.changingLane && this.currentRoadPath !== this.currentTargetNode.roadPath) {
+      this.changeLane(this.currentTargetNode.roadPath.order > this.currentRoadPath.order ? 'right' : 'left');
+    } else {
+      this.setAngleTo(this.currentTargetNode.x, this.currentTargetNode.y);
     }
   }
 
@@ -240,33 +295,50 @@ class Car {
     }
   }
 
+  changeLane(direction) {
+    const mod = direction === 'right' ? -45 : 45;
+    this.changingLane = true;
+    let newAngle = this.angle + mod;
+    if(newAngle > 180) {
+      newAngle = 180 - newAngle;
+    }
+
+    if(newAngle < -180) {
+      newAngle = 360 + newAngle;
+    }
+
+    this.setAngle(newAngle);
+  }
+
   update() {
-    if(this.broken) {
+    if(this.broken || this.currentRouteTargetIdx === null) {
       return;
     }
 
-    if(this.currentRoutePoint === null) {
-      return;
+    let targetRouteNode = this.route[this.currentRouteTargetIdx];
+    let targetRouteNodeDist = utils.getDistance(targetRouteNode.x, targetRouteNode.y, this.position.x, this.position.y);
+    if(!targetRouteNodeDist) {
+      if(!this.nextRouteNode()) {
+        return;
+      }
+
+      targetRouteNode = this.route[this.currentRouteTargetIdx];
+      targetRouteNodeDist = utils.getDistance(targetRouteNode.x, targetRouteNode.y, this.position.x, this.position.y);
     }
 
-    const targetPoint = this.route[this.currentRoutePoint];
-    const {x, y} = this.position;
+    const targetNodeDist = utils.getDistance(this.currentTargetNode.x, this.currentTargetNode.y, this.position.x, this.position.y);
 
-    const deltaX = utils.roundNumber(targetPoint.x - x, 1);
-    const deltaY = utils.roundNumber((targetPoint.y - y) * -1, 1);
-
-    if(deltaX === 0 && deltaY === 0) {
-      return this.nextRoutePoint();
-    }
-
-    this.setAngleTo(deltaX, deltaY);
+    this.calculateCarHandling();
     this.calculateCarReaction();
     this.calculateNextPosition();
 
-    const targetPointDist = Math.sqrt(((targetPoint.x - this.position.x) ** 2) + ((targetPoint.y - this.position.y) ** 2));
+    if(targetRouteNodeDist <= this.maxVelocity) {
+      this.nextRouteNode();
+      return;
+    }
 
-    if(targetPointDist < this.maxVelocity) {
-      this.nextRoutePoint();
+    if(targetNodeDist <= this.maxVelocity) {
+      this.nextTargetNode();
     }
   }
 }
