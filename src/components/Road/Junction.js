@@ -10,16 +10,78 @@ class Junction {
     this.x = intersecX;
     this.y = intersecY;
     this.trafficLights = [];
+    this.transferNodes = [];
 
     this.roads.forEach((road, i) => {
       road.ways.forEach((way) => {
         const oppositeRoad = roads[i === 0 ? 1 : 0];
 
-        Junction.createLeftCurve(road, oppositeRoad, way.lanes[0]);
-        Junction.createRightCurve(road, oppositeRoad, way.lanes[way.lanes.length - 1]);
+        this.createLeftCurve(road, oppositeRoad, way.lanes[0]);
+        this.createRightCurve(road, oppositeRoad, way.lanes[way.lanes.length - 1]);
         this.createTrafficLight(road, oppositeRoad, way);
       });
     });
+
+    this.transferNodes.forEach((transferNode) => {
+      const {way} = transferNode.roadPath;
+      const pointOnLine = utils.getPointOnLine(
+        transferNode.x,
+        transferNode.y,
+        way.nodes[0].x,
+        way.nodes[0].y,
+        way.nodes[1].x,
+        way.nodes[1].y
+      );
+
+      way.addTransferNode(pointOnLine.point.x, pointOnLine.point.y, transferNode);
+    });
+
+    this.roads.forEach((road) => {
+      road.ways.forEach((way) => {
+        way.transferNodes.forEach((transferNode) => {
+          if(transferNode.nextNodes.length) {
+            return;
+          }
+          const nextRoadPathNode = transferNode.roadPathNode.nextPoints[0];
+          const nextWayNode = nextRoadPathNode.roadPath.way.getNextNodeFrom(nextRoadPathNode.x, nextRoadPathNode.y, transferNode.way.lanes.length * constants.halfTileSize);
+          transferNode.nextNodes.push(nextWayNode);
+          // const rightCurveNode = Junction.getClosestRightAngleNode(oppositeRoad, transferNode.x, transferNode.y, way);
+          // const leftCurveNode = Junction.getClosestRightAngleNode(oppositeRoad, transferNode.x, transferNode.y, way, true);
+          // transferNode.nextNodes.push(rightCurveNode);
+          // transferNode.nextNodes.push(leftCurveNode);
+        });
+      });
+    });
+  }
+
+  static getClosestRightAngleNode(road, x, y, originWay, reverse = false) {
+    const mod = reverse ? -1 : 1;
+    let dist;
+    let minDist = null;
+    let closestNode = null;
+    road.ways.forEach((way) => {
+      way.getAllNodes().forEach((node) => {
+        if(node.x === x && node.y === y) {
+          return;
+        }
+
+        // const diffX = node.x - x;
+        // const diffY = node.y - y;
+        // const angle = utils.calcAngleDegrees(diffX, diffY);
+        const angle = utils.getLinesAngle(originWay.nodes[0].x, originWay.nodes[0].y, x, y, x, y, node.x, node.y);
+
+        if(angle === 90 * mod) {
+          dist = utils.getDistance(node.x, node.y, x, y);
+
+          if(!closestNode || dist < minDist) {
+            minDist = dist;
+            closestNode = node;
+          }
+        }
+      });
+    });
+
+    return closestNode;
   }
 
   createTrafficLight(road, oppositeRoad, way) {
@@ -47,7 +109,7 @@ class Junction {
     this.trafficLights.push(trafficLight);
   }
 
-  static createLeftCurve(road, oppositeRoad, roadPath) {
+  createLeftCurve(road, oppositeRoad, roadPath) {
     const roadThick = road.getWay('even').lanes.length * constants.halfTileSize;
     const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
     const roadPathAngle = roadPath.getAngle();
@@ -82,10 +144,11 @@ class Junction {
 
     const transferPoint = oppositeRoad.findClosestPoint(beforeTransferPoint.x, beforeTransferPoint.y);
     beforeTransferPoint.addNextPoint(transferPoint);
+    this.transferNodes.push(beforeTransferPoint);
     newPoint.addNextPoint(beforeTransferPoint);
   }
 
-  static createRightCurve(road, oppositeRoad, roadPath) {
+  createRightCurve(road, oppositeRoad, roadPath) {
     const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
     const roadPathAngle = roadPath.getAngle();
 
@@ -108,6 +171,7 @@ class Junction {
       roadPath
     });
     rightTransferPoint.addNextPoint(oppositeRoad.findClosestPoint(rightTransferPoint.x, rightTransferPoint.y));
+    this.transferNodes.push(rightTransferPoint);
     newPoint.addNextPoint(rightTransferPoint);
   }
 

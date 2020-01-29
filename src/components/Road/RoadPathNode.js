@@ -11,6 +11,8 @@ class RoadPathNode {
   }
 
   generatePathToAnyEndPoint() {
+    const roadWayNode = this.roadPath.roadWay.getClosestNode(this.x, this.y);
+
     function move(point, path) {
       path.push(point);
 

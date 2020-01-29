@@ -12,8 +12,8 @@ class Road {
     this.nodes = props.nodes;
     this.roadLanes = props.roadLanes || 1;
     this.ways = [
-      new RoadWay({type: 'even'}),
-      new RoadWay({type: 'odd'})
+      new RoadWay({type: 'even', road: this}),
+      new RoadWay({type: 'odd', road: this})
     ];
 
     this.ways.forEach(this.createWayRoadPaths.bind(this));
@@ -29,6 +29,11 @@ class Road {
     return roadPaths;
   }
 
+  // getAnyExitWayNode() {
+  //   const way = this.ways[utils.getRandomInt(0, this.ways.length)];
+  //   return way.getExitNode();
+  // }
+
   createWayRoadPaths(way) {
     if(way.type === 'odd') {
       this.nodes.reverse();
@@ -43,6 +48,22 @@ class Road {
     const sin = Math.sin(utils.angleToRadians(angle));
     const cos = Math.cos(utils.angleToRadians(angle));
 
+    /**
+     * Adding nodes to way
+     */
+    way.addNode(
+      this.nodes[0].x + (sin * (contants.tileSize / 4)) + (sin * (this.roadLanes / 2) * halfTileSize),
+      this.nodes[0].y + (cos * (contants.tileSize / 4)) + (cos * (this.roadLanes / 2) * halfTileSize)
+    );
+
+    way.addNode(
+      this.nodes[1].x + (sin * (contants.tileSize / 4)) + (sin * (this.roadLanes / 2) * halfTileSize),
+      this.nodes[1].y + (cos * (contants.tileSize / 4)) + (cos * (this.roadLanes / 2) * halfTileSize)
+    );
+
+    /**
+     * Creating RoadPaths
+     */
     for(let i = 0; i < this.roadLanes; i++) {
       const roadPath = new RoadPath({
         name: `${this.name}-${way.type}-${i}`,

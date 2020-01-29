@@ -10,20 +10,25 @@ const utils = {
    * @param {number} lStartY
    * @param {number} lEndX
    * @param {number} lEndY
+   * @returns {point: {x: number, y: number}, left: boolean, dot: number: t: number}
    */
   getPointOnLine(pointX, pointY, lStartX, lStartY, lEndX, lEndY) {
-    const atob = {x: lEndX - lStartX, y: lEndY - lStartY};
-    const atop = {x: pointX - lStartX, y: pointY - lStartY};
-    const len = atop.x * atop.x + atob.y * atob.y;
-    let dot = atop.x * atop.x + atop.y * atob.y;
+    const p = {x: pointX, y: pointY};
+    const a = {x: lStartX, y: lStartY};
+    const b = {x: lEndX, y: lEndY};
+
+    const atob = {x: b.x - a.x, y: b.y - a.y};
+    const atop = {x: p.x - a.x, y: p.y - a.y};
+    const len = atob.x * atob.x + atob.y * atob.y;
+    let dot = atop.x * atob.x + atop.y * atob.y;
     const t = Math.min(1, Math.max(0, dot / len));
 
-    dot = (lEndX - lStartX) * (pointY - lStartY) - (lEndY - lStartY) * (pointX - lStartX);
+    dot = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
 
     return {
       point: {
-        x: lStartX + atop.x * t,
-        y: lStartY + atob.y * t
+        x: a.x + atob.x * t,
+        y: a.y + atob.y * t
       },
       left: dot < 1,
       dot,
@@ -99,17 +104,37 @@ const utils = {
   radiansToAngle(radians) {
     return radians * (180 / Math.PI);
   },
+  getLinesAngle(A1x, A1y, A2x, A2y, B1x, B1y, B2x, B2y) {
+    const dAx = A2x - A1x;
+    const dAy = A2y - A1y;
+    const dBx = B2x - B1x;
+    const dBy = B2y - B1y;
+    let angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
+    if(angle < 0) {
+      angle *= -1;
+    }
+    return angle * (180 / Math.PI);
+  },
+  getAnglesDiff(a1, a2) {
+    let aDiff = a1 - a2;
+    if(aDiff > 180) {
+      aDiff += -360;
+    } else {
+      aDiff += aDiff < -180 ? 360 : 0;
+    }
+    return aDiff;
+  },
   angleToRadians(angle) {
     return angle * Math.PI / 180;
   },
   calcAngleDegrees(x, y) {
     return this.roundNumber(this.radiansToAngle(Math.atan2(y, x)), 2);
   },
-  getDistance(x1, x2, y1, y2) {
-    const a = x1 - x2;
-    const b = y1 - y2;
+  getDistance(x1, y1, x2, y2) {
+    const xs = x2 - x1;
+    const ys = y2 - y1;
 
-    return Math.sqrt(a * a + b * b);
+    return Math.sqrt(xs * xs + ys * ys);
   },
 
   /**
@@ -171,6 +196,17 @@ const utils = {
     }
 
     return [];
+  },
+
+  /**
+   * Get distance between two points
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
+   */
+  getPointsDistance(x1, y1, x2, y2) {
+    return Math.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2));
   }
 };
 
