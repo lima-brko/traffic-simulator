@@ -115,6 +115,13 @@ const utils = {
     }
     return angle * (180 / Math.PI);
   },
+
+  /**
+   * TODO verify function tests
+   * Get the difference between two angles
+   * @param {number} a1
+   * @param {number} a2
+   */
   getAnglesDiff(a1, a2) {
     let aDiff = a1 - a2;
     if(aDiff > 180) {
@@ -129,12 +136,6 @@ const utils = {
   },
   calcAngleDegrees(x, y) {
     return this.roundNumber(this.radiansToAngle(Math.atan2(y, x)), 2);
-  },
-  getDistance(x1, y1, x2, y2) {
-    const xs = x2 - x1;
-    const ys = y2 - y1;
-
-    return Math.sqrt(xs * xs + ys * ys);
   },
 
   /**

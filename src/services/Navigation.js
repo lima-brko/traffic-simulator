@@ -97,7 +97,7 @@ class Navigation {
       graph[key] = {};
 
       node.nextNodes.forEach((nextNode) => {
-        graph[key][nextNode !== endRoadWayNode ? nextNode.name : 'finish'] = utils.getDistance(node.x, node.y, nextNode.x, nextNode.y);
+        graph[key][nextNode !== endRoadWayNode ? nextNode.name : 'finish'] = utils.getPointsDistance(node.x, node.y, nextNode.x, nextNode.y);
 
         move(nextNode, graph);
       });

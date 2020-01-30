@@ -27,13 +27,13 @@ class RoadWay {
 
   getNextNodeFrom(x, y, startDistOffset) {
     const startNode = this.nodes[0];
-    const startDist = utils.getDistance(x, y, startNode.x, startNode.y) + startDistOffset;
+    const startDist = utils.getPointsDistance(x, y, startNode.x, startNode.y) + startDistOffset;
     let dist;
     let minDist;
     let nextNode = null;
 
     this.getAllNodes().forEach((node) => {
-      dist = utils.getDistance(node.x, node.y, startNode.x, startNode.y);
+      dist = utils.getPointsDistance(node.x, node.y, startNode.x, startNode.y);
 
       if(dist <= startDist) {
         return;

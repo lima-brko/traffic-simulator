@@ -95,12 +95,12 @@ class Road {
         roadPath.addPoint(point);
       }
 
-      const lastNode = new RoadPathNode({
-        x: this.nodes[1].x + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
-        y: this.nodes[1].y + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
-      });
+      // const lastNode = new RoadPathNode({
+      //   x: this.nodes[1].x + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
+      //   y: this.nodes[1].y + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
+      // });
 
-      roadPath.addPoint(lastNode);
+      // roadPath.addPoint(lastNode);
 
       way.lanes.push(roadPath);
     }

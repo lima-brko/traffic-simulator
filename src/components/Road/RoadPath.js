@@ -34,7 +34,7 @@ class RoadPath {
   getAngle() {
     const x = this.initPoint.nextPoints[0].x - this.initPoint.x;
     const y = this.initPoint.nextPoints[0].y - this.initPoint.y;
-    return utils.calcAngleDegrees(x, y);
+    return utils.calcAngleDegrees(x, y * -1);
   }
 
   find(condition) {
@@ -245,6 +245,79 @@ class RoadPath {
     ctx.resetTransform();
   }
 
+  static getPathUntilNode(fromNode, targetNode) {
+    function move(node, path = []) {
+      if(node === targetNode) {
+        path.push(node);
+        return path;
+      }
+
+      if(!node.nextPoints.length) {
+        return null;
+      }
+
+      let nextNode;
+      let foundPath;
+      for(let i = 0; i < node.nextPoints.length; i++) {
+        nextNode = node.nextPoints[i];
+        if(nextNode.roadPath !== node.roadPath) {
+          return null;
+        }
+
+        foundPath = move(nextNode, [...path, node]);
+        if(foundPath) {
+          // eslint-disable-next-line no-param-reassign
+          return foundPath;
+        }
+      }
+
+      return null;
+    }
+
+    const foundPath = move(fromNode);
+    return foundPath.length === 0 ? null : foundPath;
+  }
+
+  getNextNodeFrom(x, y) {
+    const tolerance = 10;
+    function move(point, prevPoint) {
+      if(point.x === x && point.y === y) {
+        return point;
+      }
+
+      if(prevPoint) {
+        const pointOnLine = utils.getPointOnLine(
+          x,
+          y,
+          prevPoint.x,
+          prevPoint.y,
+          point.x,
+          point.y
+        );
+
+        if(pointOnLine.dot < tolerance && pointOnLine.t > 0 && pointOnLine.t < 1) {
+          return point;
+        }
+      }
+
+      if(!point.nextPoints.length) {
+        return null;
+      }
+
+      let foundPoint;
+      for(let i = 0; i < point.nextPoints.length; i++) {
+        foundPoint = move(point.nextPoints[i], point);
+        if(foundPoint) {
+          return foundPoint;
+        }
+      }
+
+      return null;
+    }
+
+    return move(this.initPoint);
+  }
+
   drawOnCanvas(ctx) {
     if(this.order === 0) {
       return;
@@ -252,14 +325,14 @@ class RoadPath {
 
     const angle = this.getAngle();
     const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
-    const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize * -1;
+    const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize;
 
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
     // Road lane dashed line
     ctx.beginPath();
     function moveLine(point) {
-      ctx.lineTo(point.x + angleModX, point.y + angleModY);
+      ctx.lineTo(point.x - angleModX, point.y - angleModY);
 
       if(!point.nextPoints.length) {
         return false;
@@ -268,7 +341,7 @@ class RoadPath {
       return moveLine(point.nextPoints[0]);
     }
 
-    ctx.moveTo(this.initPoint.x + angleModX, this.initPoint.y + angleModY);
+    ctx.moveTo(this.initPoint.x - angleModX, this.initPoint.y - angleModY);
     moveLine(this.initPoint.nextPoints[0]);
 
     ctx.lineWidth = 1;

@@ -71,7 +71,7 @@ class Junction {
         const angle = utils.getLinesAngle(originWay.nodes[0].x, originWay.nodes[0].y, x, y, x, y, node.x, node.y);
 
         if(angle === 90 * mod) {
-          dist = utils.getDistance(node.x, node.y, x, y);
+          dist = utils.getPointsDistance(node.x, node.y, x, y);
 
           if(!closestNode || dist < minDist) {
             minDist = dist;
