@@ -37,6 +37,19 @@ const utils = {
   },
 
   /**
+   * Get triangle area given 3 points
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
+   * @param {number} x3
+   * @param {number} y3
+   */
+  getTriangleArea(x1, y1, x2, y2, x3, y3) {
+    return Math.abs(0.5 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)));
+  },
+
+  /**
    * Get intersection point between two lines
    * @param {number} l1StartX
    * @param {number} l1StartY

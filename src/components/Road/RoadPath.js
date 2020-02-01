@@ -64,61 +64,34 @@ class RoadPath {
   }
 
   createNodeOnLineIntersect(line) {
-    function find(node) {
-      if(!node.nextPoints.length) {
-        return null;
-      }
+    const startNode = this.initPoint;
+    const endNode = this.getDeepestPoint();
+    const intersection = utils.getLinesIntersection(
+      startNode.x,
+      startNode.y,
+      endNode.x,
+      endNode.y,
+      line[0].x,
+      line[0].y,
+      line[1].x,
+      line[1].y,
+      true
+    );
 
-      const intersection = utils.getLinesIntersection(
-        node.x,
-        node.y,
-        node.nextPoints[0].x,
-        node.nextPoints[0].y,
-        line[0].x,
-        line[0].y,
-        line[1].x,
-        line[1].y,
-        true
-      );
-
-      if(!intersection || !intersection.onLine1) {
-        return find(node.nextPoints[0]);
-      }
-
-      return {
-        intersection,
-        node1: node,
-        node2: node.nextPoints[0]
-      };
-    }
-
-    const intersectionData = find(this.initPoint);
-
-    if(!intersectionData) {
+    if(!intersection) {
       return null;
     }
 
-    if(
-      intersectionData.intersection.x === intersectionData.node1.x &&
-      intersectionData.intersection.y === intersectionData.node1.y
-    ) {
-      return intersectionData.node1;
-    }
-
-    if(
-      intersectionData.intersection.x === intersectionData.node2.x &&
-      intersectionData.intersection.y === intersectionData.node2.y
-    ) {
-      return intersectionData.node2;
-    }
-
     const newPoint = new RoadPathNode({
-      x: intersectionData.intersection.x,
-      y: intersectionData.intersection.y,
+      x: intersection.x,
+      y: intersection.y,
       roadPath: this
     });
 
-    intersectionData.node2.addBefore(newPoint);
+    this
+      .getNextNodeFrom(intersection.x, intersection.y)
+      .addBefore(newPoint);
+
     return newPoint;
   }
 
@@ -176,11 +149,12 @@ class RoadPath {
   }
 
   drawDetailsOnCanvas(ctx) {
+    const {way} = this;
     ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
 
     // Lines
     ctx.beginPath();
-    ctx.strokeStyle = colors.ways[this.way.type];
+    ctx.strokeStyle = colors.ways[way.type];
 
     function drawLines(point) {
       point.nextPoints.forEach((nextPoint) => {
@@ -213,7 +187,7 @@ class RoadPath {
       }
 
       ctx.beginPath();
-      ctx.fillStyle = colors.ways[this.way.type];
+      ctx.fillStyle = colors.ways[way.type];
       edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
       ctx.moveTo(edgeX, edgeY);
@@ -279,46 +253,38 @@ class RoadPath {
   }
 
   getNextNodeFrom(x, y) {
-    const tolerance = 10;
-    function move(point, prevPoint) {
-      if(point.x === x && point.y === y) {
-        return point;
-      }
+    let angle1;
+    let angle2;
+    let angleDiff;
+    let maxAngleDiff;
+    let closestNextNode = null;
 
-      if(prevPoint) {
-        const pointOnLine = utils.getPointOnLine(
-          x,
-          y,
-          prevPoint.x,
-          prevPoint.y,
-          point.x,
-          point.y
-        );
-
-        if(pointOnLine.dot < tolerance && pointOnLine.t > 0 && pointOnLine.t < 1) {
-          return point;
-        }
-      }
-
+    function move(point) {
       if(!point.nextPoints.length) {
-        return null;
+        return false;
       }
 
-      let foundPoint;
-      for(let i = 0; i < point.nextPoints.length; i++) {
-        foundPoint = move(point.nextPoints[i], point);
-        if(foundPoint) {
-          return foundPoint;
-        }
+      angle1 = utils.calcAngleDegrees(x - point.x, y - point.y);
+      angle2 = utils.calcAngleDegrees(x - point.nextPoints[0].x, y - point.nextPoints[0].y);
+      angleDiff = Math.abs(utils.getAnglesDiff(angle1, angle2));
+
+      if(!maxAngleDiff || angleDiff > maxAngleDiff) {
+        maxAngleDiff = angleDiff;
+        // eslint-disable-next-line prefer-destructuring
+        closestNextNode = point.nextPoints[0];
       }
 
-      return null;
+      return move(point.nextPoints[0]);
     }
 
-    return move(this.initPoint);
+    move(this.initPoint);
+
+    return closestNextNode;
   }
 
   drawOnCanvas(ctx) {
+    // this.drawDetailsOnCanvas(ctx);
+
     if(this.order === 0) {
       return;
     }

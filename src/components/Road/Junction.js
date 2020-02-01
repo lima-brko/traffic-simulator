@@ -45,10 +45,6 @@ class Junction {
           const nextRoadPathNode = transferNode.roadPathNode.nextPoints[0];
           const nextWayNode = nextRoadPathNode.roadPath.way.getNextNodeFrom(nextRoadPathNode.x, nextRoadPathNode.y, transferNode.way.lanes.length * constants.halfTileSize);
           transferNode.nextNodes.push(nextWayNode);
-          // const rightCurveNode = Junction.getClosestRightAngleNode(oppositeRoad, transferNode.x, transferNode.y, way);
-          // const leftCurveNode = Junction.getClosestRightAngleNode(oppositeRoad, transferNode.x, transferNode.y, way, true);
-          // transferNode.nextNodes.push(rightCurveNode);
-          // transferNode.nextNodes.push(leftCurveNode);
         });
       });
     });
@@ -117,23 +113,23 @@ class Junction {
     const oppositeRoadLine = [
       {
         x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
-        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick
+        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
       },
       {
         x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
-        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick
+        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
       }
     ];
 
     const newPoint = roadPath.createNodeOnLineIntersect(oppositeRoadLine);
 
     const seg1 = {
-      x: newPoint.x + Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick + constants.quarterTileSize),
-      y: newPoint.y + Math.sin(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick + constants.quarterTileSize)
+      x: newPoint.x + Math.cos(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick + constants.quarterTileSize),
+      y: newPoint.y + Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick + constants.quarterTileSize)
     };
     const seg2 = {
-      x: seg1.x + Math.cos(utils.angleToRadians(roadPathAngle - 90)) * (roadThick + constants.quarterTileSize),
-      y: seg1.y + Math.sin(utils.angleToRadians(roadPathAngle - 90)) * (roadThick + constants.quarterTileSize)
+      x: seg1.x - Math.cos(utils.angleToRadians(roadPathAngle - 90)) * (roadThick + constants.quarterTileSize),
+      y: seg1.y - Math.sin(utils.angleToRadians(roadPathAngle + 90)) * (roadThick + constants.quarterTileSize)
     };
 
     const beforeTransferPoint = new RoadPathNode({
@@ -141,11 +137,19 @@ class Junction {
       y: seg2.y,
       roadPath
     });
+    const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
+    const transferPoint = new RoadPathNode({
+      x: beforeTransferPoint.x,
+      y: beforeTransferPoint.y,
+      roadPath: oppositeRoadPath
+    });
+    oppositeRoadPath
+      .getNextNodeFrom(transferPoint.x, transferPoint.y)
+      .addBefore(transferPoint);
 
-    const transferPoint = oppositeRoad.findClosestPoint(beforeTransferPoint.x, beforeTransferPoint.y);
+    newPoint.addNextPoint(beforeTransferPoint);
     beforeTransferPoint.addNextPoint(transferPoint);
     this.transferNodes.push(beforeTransferPoint);
-    newPoint.addNextPoint(beforeTransferPoint);
   }
 
   createRightCurve(road, oppositeRoad, roadPath) {
@@ -155,24 +159,35 @@ class Junction {
     const oppositeRoadLine = [
       {
         x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize),
-        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize)
+        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick - constants.quarterTileSize)
       },
       {
         x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize),
-        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize)
+        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick - constants.quarterTileSize)
       }
     ];
 
     const newPoint = roadPath.createNodeOnLineIntersect(oppositeRoadLine);
 
-    const rightTransferPoint = new RoadPathNode({
-      x: newPoint.x + Math.cos(utils.angleToRadians(roadPathAngle + 90)) * (contants.tileSize * 0.25),
-      y: newPoint.y + Math.sin(utils.angleToRadians(roadPathAngle + 90)) * (contants.tileSize * 0.25),
+    const beforeTransferPoint = new RoadPathNode({
+      x: newPoint.x - Math.cos(utils.angleToRadians(roadPathAngle + 90)) * (contants.tileSize * 0.25),
+      y: newPoint.y - Math.sin(utils.angleToRadians(roadPathAngle - 90)) * (contants.tileSize * 0.25),
       roadPath
     });
-    rightTransferPoint.addNextPoint(oppositeRoad.findClosestPoint(rightTransferPoint.x, rightTransferPoint.y));
-    this.transferNodes.push(rightTransferPoint);
-    newPoint.addNextPoint(rightTransferPoint);
+
+    const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
+    const transferPoint = new RoadPathNode({
+      x: beforeTransferPoint.x,
+      y: beforeTransferPoint.y,
+      roadPath: oppositeRoadPath
+    });
+    oppositeRoadPath
+      .getNextNodeFrom(transferPoint.x, transferPoint.y)
+      .addBefore(transferPoint);
+
+    newPoint.addNextPoint(beforeTransferPoint);
+    beforeTransferPoint.addNextPoint(transferPoint);
+    this.transferNodes.push(beforeTransferPoint);
   }
 
   drawOnCanvas(ctx) {

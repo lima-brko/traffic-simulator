@@ -6,9 +6,9 @@ export default {
   quarterTileSize: tileSize / 4,
   worldWidth: 1250,
   worldHeight: 1250,
-  carTotal: 1,
+  carTotal: 40,
   roadsTotal: 2,
-  roadLanes: 2,
+  roadLanes: 3,
   colors: {
     road: '#989899'
   }

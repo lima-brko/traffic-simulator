@@ -352,8 +352,8 @@ class Car {
 
     const {x, y} = this.position;
     const diagonalPos = {
-      x: x + Math.sin(utils.angleToRadians(newAngle)) * 10 * mod,
-      y: y - Math.cos(utils.angleToRadians(newAngle)) * 10 * mod
+      x: x + Math.cos(utils.angleToRadians(newAngle)) * 10,
+      y: y + Math.sin(utils.angleToRadians(newAngle * -1)) * 10
     };
 
     const intersection = utils.getLinesIntersection(

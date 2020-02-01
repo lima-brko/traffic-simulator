@@ -29,11 +29,6 @@ class Road {
     return roadPaths;
   }
 
-  // getAnyExitWayNode() {
-  //   const way = this.ways[utils.getRandomInt(0, this.ways.length)];
-  //   return way.getExitNode();
-  // }
-
   createWayRoadPaths(way) {
     if(way.type === 'odd') {
       this.nodes.reverse();
@@ -83,24 +78,24 @@ class Road {
 
       roadPath.addPoint(firstNode);
 
-      let point;
-      let fragmentPerc;
-      for(let j = 1; j <= nodesCount; j++) {
-        fragmentPerc = 1 / nodesCount * j;
-        point = new RoadPathNode({
-          x: this.nodes[0].x + (diffX * fragmentPerc) + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
-          y: this.nodes[0].y + (diffY * fragmentPerc) + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
-        });
+      // let point;
+      // let fragmentPerc;
+      // for(let j = 1; j <= nodesCount; j++) {
+      //   fragmentPerc = 1 / nodesCount * j;
+      //   point = new RoadPathNode({
+      //     x: this.nodes[0].x + (diffX * fragmentPerc) + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
+      //     y: this.nodes[0].y + (diffY * fragmentPerc) + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
+      //   });
 
-        roadPath.addPoint(point);
-      }
+      //   roadPath.addPoint(point);
+      // }
 
-      // const lastNode = new RoadPathNode({
-      //   x: this.nodes[1].x + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
-      //   y: this.nodes[1].y + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
-      // });
+      const lastNode = new RoadPathNode({
+        x: this.nodes[0].x + diffX + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
+        y: this.nodes[0].y + diffY + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
+      });
 
-      // roadPath.addPoint(lastNode);
+      roadPath.addPoint(lastNode);
 
       way.lanes.push(roadPath);
     }
@@ -212,6 +207,27 @@ class Road {
     this.getRoadPaths().forEach((roadPath) => {
       roadPath.drawOnCanvas(ctx);
     });
+  }
+
+  findClosestRoadPath(x, y) {
+    let closestRoadPath = null;
+    let minDist = null;
+    let pointOnLine;
+    let startNode;
+    let endNode;
+    this.getRoadPaths().forEach((roadPath) => {
+      startNode = roadPath.initPoint;
+      endNode = roadPath.getDeepestPoint();
+      pointOnLine = utils.getPointOnLine(x, y, startNode.x, startNode.y, endNode.x, endNode.y);
+
+      if(!closestRoadPath || Math.abs(pointOnLine.dot) < minDist) {
+        minDist = Math.abs(pointOnLine.dot);
+        closestRoadPath = roadPath;
+      }
+      return false;
+    });
+
+    return closestRoadPath;
   }
 
   findClosestPoint(x, y) {

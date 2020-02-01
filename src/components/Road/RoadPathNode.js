@@ -38,15 +38,22 @@ class RoadPathNode {
 
     const prevPoint = this.getBefore();
     anotherPoint.addNextPoint(this);
-    prevPoint.removeNextPoint(this);
-    prevPoint.addNextPoint(anotherPoint);
+    prevPoint.replaceNextPoint(this, anotherPoint);
+  }
+
+  replaceNextPoint(existNode, replaceNode) {
+    const index = this.nextPoints.indexOf(existNode);
+
+    if(index !== -1) {
+      this.nextPoints.splice(index, 1, replaceNode);
+    }
   }
 
   removeNextPoint(point) {
     const index = this.nextPoints.indexOf(point);
 
     if(index !== -1) {
-      this.nextPoints.splice(index, 0);
+      this.nextPoints.splice(index, 1);
     }
   }
 
