@@ -6,6 +6,7 @@ import {
   Geometry
 
 } from 'three';
+import utils from '../../helpers/utils';
 
 const materials = {
   green: new LineBasicMaterial({
@@ -20,6 +21,7 @@ class CarSensor {
   constructor(props) {
     this.name = props.name;
     this.car = props.car;
+    this.angle = props.angle;
     this.near = props.near;
     this.far = props.far;
     this.distance = null;
@@ -32,9 +34,13 @@ class CarSensor {
 
   createLine() {
     const geometry = new Geometry();
+    const nearX = Math.cos(utils.angleToRadians(this.angle + 90)) * this.near;
+    const nearY = Math.sin(utils.angleToRadians(this.angle + 90)) * this.near;
+    const farX = Math.cos(utils.angleToRadians(this.angle + 90)) * this.far;
+    const farY = Math.sin(utils.angleToRadians(this.angle + 90)) * this.far;
     geometry.vertices.push(
-      new Vector3(0, this.near, 6),
-      new Vector3(0, this.far, 6)
+      new Vector3(nearX, nearY, 6),
+      new Vector3(farX, farY, 6)
     );
     const line = new Line(geometry, materials.green);
     line.name = 'sensor';

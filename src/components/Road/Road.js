@@ -38,8 +38,6 @@ class Road {
     const diffX = this.nodes[1].x - this.nodes[0].x;
     const diffY = this.nodes[1].y - this.nodes[0].y;
     const angle = utils.calcAngleDegrees(diffX, diffY * -1);
-    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
-    const nodesCount = Math.floor(distance / constants.tileSize);
     const sin = Math.sin(utils.angleToRadians(angle));
     const cos = Math.cos(utils.angleToRadians(angle));
 
@@ -75,26 +73,12 @@ class Road {
         x: this.nodes[0].x + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
         y: this.nodes[0].y + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
       });
-
       roadPath.addPoint(firstNode);
-
-      // let point;
-      // let fragmentPerc;
-      // for(let j = 1; j <= nodesCount; j++) {
-      //   fragmentPerc = 1 / nodesCount * j;
-      //   point = new RoadPathNode({
-      //     x: this.nodes[0].x + (diffX * fragmentPerc) + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
-      //     y: this.nodes[0].y + (diffY * fragmentPerc) + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
-      //   });
-
-      //   roadPath.addPoint(point);
-      // }
 
       const lastNode = new RoadPathNode({
         x: this.nodes[0].x + diffX + (sin * (contants.tileSize / 4)) + (sin * i * halfTileSize),
         y: this.nodes[0].y + diffY + (cos * (contants.tileSize / 4)) + (cos * i * halfTileSize)
       });
-
       roadPath.addPoint(lastNode);
 
       way.lanes.push(roadPath);

@@ -221,7 +221,11 @@ class DarwinCity {
       randomFreePointIdx = utils.getRandomInt(0, freePoints.length);
       [startPoint] = freePoints.splice(randomFreePointIdx, 1);
       endRoad = this.getDifferentRoad(startPoint.roadPath.way.road);
+      // endRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
       endWay = endRoad.ways[utils.getRandomInt(0, endRoad.ways.length)];
+      // if(endRoad === startPoint.roadPath.way.road) {
+      //   endWay = startPoint.roadPath.way;
+      // }
       endPoint = endWay.lanes[utils.getRandomInt(0, endWay.lanes.length)].getDeepestPoint();
       this.createRandomCar(startPoint, endPoint, this.cars.length);
     }
