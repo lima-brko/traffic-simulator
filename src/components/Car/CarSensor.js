@@ -25,6 +25,7 @@ class CarSensor {
     this.near = props.near;
     this.far = props.far;
     this.distance = null;
+    this.collisionObj = null;
     this.raycaster = new Raycaster();
     this.raycaster.near = props.near;
     this.raycaster.far = props.far;
@@ -56,9 +57,11 @@ class CarSensor {
   reset() {
     this.setLineMaterial(materials.green);
     this.distance = null;
+    this.collisionObj = null;
   }
 
-  update(collidableMeshList) {
+  update(collidableList) {
+    const collidableMeshList = collidableList.map((obj) => obj.hitboxMesh);
     const localVertex = this.line.geometry.vertices[1].clone();
     const globalVertex = localVertex.applyMatrix4(this.line.parent.matrix);
     const directionVector = globalVertex.sub(this.line.parent.position);
@@ -75,6 +78,7 @@ class CarSensor {
         return acc;
       });
 
+      this.collisionObj = collidableList[collidableMeshList.indexOf(closestCollision.object)];
       this.distance = closestCollision.distance;
       this.setLineMaterial(materials.yellow);
     } else {

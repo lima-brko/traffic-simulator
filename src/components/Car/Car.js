@@ -41,8 +41,8 @@ class Car {
     this.currentRoadPath = null;
 
     this.velocity = 0;
-    this.brakePower = 0.08;
-    this.accelerationPower = 0.08;
+    this.brakePower = 0.1;
+    this.accelerationPower = 0.01;
 
     this.maxVelocity = utils.getRandomInt(15, 20) / 10;
     this.callbacks = {
@@ -118,7 +118,6 @@ class Car {
   }
 
   setRoute(routePath, callbacks) {
-    // const routeTiles = this.navigation.findBestRoute(fromTile, toTile);
     this.route = routePath;
     this.routeIdx = 0;
     this.currentRoadPath = this.route[this.routeIdx].roadPath;
@@ -172,6 +171,10 @@ class Car {
     }
 
     this.detailedRouteIdx++;
+
+    if(detailedRouteNode.beforeLaneChange) {
+      this.currentRoadPath = nextDetailedRouteNode.roadPath;
+    }
 
     if(detailedRouteNode.laneChange) {
       this.currentRoadPath = detailedRouteNode.roadPath;
@@ -247,12 +250,13 @@ class Car {
   }
 
   checkCollision(collidableList) {
-    if(this.broken) {
+    if(this.broken || this.routeIdx === null) {
       return;
     }
 
     this.resetSensors();
 
+    // Hit check
     const collidableMeshList = collidableList
       .filter((obj) => {
         if(obj instanceof TrafficLight && obj.state !== 'red') {
@@ -275,10 +279,13 @@ class Car {
       });
     }
 
+    // Sensors check
+    this.sensors.front.update(collidableList);
+
     const sensorCollidableList = collidableList
-      .filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath === this.currentRoadPath))
-      .map((obj) => obj.hitboxMesh);
-    this.sensors.front.update(sensorCollidableList);
+      .filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath === this.currentRoadPath));
+    this.sensors.fleft.update(sensorCollidableList);
+    this.sensors.fright.update(sensorCollidableList);
 
     let detailRouteNode = this.detailedRoute[this.detailedRouteIdx];
     if(detailRouteNode.beforeLaneChange) {
@@ -287,10 +294,8 @@ class Car {
 
     if(detailRouteNode.laneChange) {
       const sideSensorCollidableList = collidableList
-        .filter((obj) => obj instanceof Car && obj.currentRoadPath === detailRouteNode.roadPath)
-        .map((obj) => obj.hitboxMesh);
+        .filter((obj) => obj instanceof Car && obj.currentRoadPath === detailRouteNode.roadPath);
       this.sensors[detailRouteNode.direction].update(sideSensorCollidableList);
-      this.sensors[`f${detailRouteNode.direction}`].update(sideSensorCollidableList);
       this.sensors[`r${detailRouteNode.direction}`].update(sideSensorCollidableList);
     }
   }
@@ -331,28 +336,37 @@ class Car {
     const endDistance = this.getLeftDistanceToEnd();
     const distanceToStop = this.getStoppingDistance(this.velocity);
     const detailedRouteNode = this.detailedRoute[this.detailedRouteIdx];
+
+    if(this.sensors.front.distance !== null) {
+      this.brake();
+      return;
+    }
+
     let sensorMinDist = null;
+    let sensorMin = null;
     Object.keys(this.sensors).forEach((sensorDirection) => {
       if(this.sensors[sensorDirection].distance === null) {
         return;
       }
 
       if(!sensorMinDist || this.sensors[sensorDirection].distance < sensorMinDist) {
-        sensorMinDist = this.sensors[sensorDirection].distance;
+        sensorMin = this.sensors[sensorDirection];
+        sensorMinDist = sensorMin.distance;
       }
     });
 
-    if(
-      sensorMinDist !== null
-    ) {
-      this.brake();
+    if(sensorMin) {
+      if(sensorMin.collisionObj instanceof Car && (this.velocity > sensorMin.collisionObj.velocity || !sensorMin.collisionObj.velocity)) {
+        this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
+        this.accelerate();
+      } else {
+        this.brake();
+      }
       return;
     }
 
     if(endDistance <= distanceToStop) {
       this.brake();
-    } else if(sensorMinDist === distanceToStop) {
-      // this.accelerate();
     } else {
       this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
       this.accelerate();
@@ -380,8 +394,8 @@ class Car {
     let intersection;
 
     changingLaneNodes.push({
-      x: x + (Math.cos(utils.angleToRadians(roadPathAngle)) * 20),
-      y: y + (Math.sin(utils.angleToRadians(roadPathAngle * -1)) * 20),
+      x: x + (Math.cos(utils.angleToRadians(roadPathAngle)) * 50),
+      y: y + (Math.sin(utils.angleToRadians(roadPathAngle * -1)) * 50),
       roadPath: this.currentRoadPath,
       beforeLaneChange: true
     });

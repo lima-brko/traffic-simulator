@@ -7,7 +7,7 @@ import {
   CanvasTexture
 } from 'three';
 
-const carSize = 30;
+const carSize = 20;
 
 function createCabinTexture(width, height, rects) {
   const canvas = document.createElement('canvas');
@@ -25,7 +25,7 @@ function createCabinTexture(width, height, rects) {
 
 function createWheel() {
   const wheel = new Mesh(
-    new BoxBufferGeometry(16, 5, 5),
+    new BoxBufferGeometry(12, 4, 4),
     new MeshBasicMaterial({color: 0x000000})
   );
   wheel.position.z = 2.5;
@@ -60,7 +60,7 @@ function create3dModel(color) {
 
   // Car Chassis
   const main = new Mesh(
-    new BoxBufferGeometry(14, carSize, 7),
+    new BoxBufferGeometry(10, carSize, 7),
     new MeshBasicMaterial({color, flatShading: true})
   );
   main.position.z = 6;
@@ -68,7 +68,7 @@ function create3dModel(color) {
 
   // Car Cabin
   const cabin = new Mesh(
-    new BoxBufferGeometry(14, 15, 6),
+    new BoxBufferGeometry(10, 12, 6),
     [
       new MeshBasicMaterial({color: 0xcccccc, map: carRightSideTexture}),
       new MeshBasicMaterial({color: 0xcccccc, map: carLeftSideTexture}),
@@ -78,22 +78,22 @@ function create3dModel(color) {
       new MeshBasicMaterial({color: 0xcccccc})
     ]
   );
-  cabin.position.y = -3.5;
+  cabin.position.y = -2.5;
   cabin.position.z = 12.5;
   carGroup.add(cabin);
 
   // Car Wheels
   const frontWheel = createWheel();
-  frontWheel.position.y = -9;
+  frontWheel.position.y = -7;
   carGroup.add(frontWheel);
 
   const backWheel = createWheel();
-  backWheel.position.y = 9;
+  backWheel.position.y = 7;
   carGroup.add(backWheel);
 
   // Car HitBox
   const hitbox = new Mesh(
-    new BoxGeometry(14, carSize, 20),
+    new BoxGeometry(10, carSize, 20),
     new MeshBasicMaterial({
       color,
       opacity: 0.5,
