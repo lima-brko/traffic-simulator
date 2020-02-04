@@ -7,6 +7,7 @@ import {
 
 } from 'three';
 import utils from '../../helpers/utils';
+import TrafficLight from '../Road/TrafficLight';
 
 const materials = {
   green: new LineBasicMaterial({
@@ -25,6 +26,7 @@ class CarSensor {
     this.near = props.near;
     this.far = props.far;
     this.distance = null;
+    this.collisions = null;
     this.collisionObj = null;
     this.raycaster = new Raycaster();
     this.raycaster.near = props.near;
@@ -54,17 +56,32 @@ class CarSensor {
     }
   }
 
+  isCollidingTrafficLight() {
+    if(!this.collisions) {
+      return false;
+    }
+
+    for(let i = 0; i < this.collisions.length; i++) {
+      if(this.collisions[i] instanceof TrafficLight) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   reset() {
     this.setLineMaterial(materials.green);
     this.distance = null;
+    this.collisions = null;
     this.collisionObj = null;
   }
 
   update(collidableList) {
     const collidableMeshList = collidableList.map((obj) => obj.hitboxMesh);
     const localVertex = this.line.geometry.vertices[1].clone();
-    const globalVertex = localVertex.applyMatrix4(this.line.parent.matrix);
-    const directionVector = globalVertex.sub(this.line.parent.position);
+    const globalVertex = localVertex.applyMatrix4(this.car.mesh.matrix);
+    const directionVector = globalVertex.sub(this.car.mesh.position);
 
     this.raycaster.set(this.car.mesh.position.clone(), directionVector.clone().normalize());
 
@@ -78,6 +95,7 @@ class CarSensor {
         return acc;
       });
 
+      this.collisions = collisions.map((collision) => collidableList[collidableMeshList.indexOf(collision.object)]);
       this.collisionObj = collidableList[collidableMeshList.indexOf(closestCollision.object)];
       this.distance = closestCollision.distance;
       this.setLineMaterial(materials.yellow);

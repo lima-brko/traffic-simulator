@@ -8,7 +8,9 @@ class RoadPathNode {
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
     this.maxSpeed = props.maxSpeed || null;
+    this.direction = props.direction || null;
     this.laneChange = props.laneChange || false;
+    this.beforeLaneChange = props.beforeLaneChange || false;
   }
 
   getBefore() {

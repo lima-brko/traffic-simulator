@@ -1,7 +1,6 @@
 import constants from '../../helpers/constants';
 import utils from '../../helpers/utils';
 import RoadPathNode from './RoadPathNode';
-import {safeVelocity} from '../Car';
 
 const colors = {
   ways: {
@@ -85,8 +84,7 @@ class RoadPath {
     const newPoint = new RoadPathNode({
       x: intersection.x,
       y: intersection.y,
-      roadPath: this,
-      maxSpeed: safeVelocity
+      roadPath: this
     });
 
     this

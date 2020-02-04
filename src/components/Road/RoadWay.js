@@ -134,33 +134,17 @@ class RoadWay {
   }
 
   drawOnCanvas(ctx) {
-    const angle = this.getAngle();
-    const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
-    const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize;
-
     ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
 
     // Road lane dashed line
     ctx.beginPath();
-    function moveLine(point) {
-      ctx.lineTo(point.x - angleModX, point.y - angleModY);
-
-      if(!point.nextPoints.length) {
-        return false;
-      }
-
-      return moveLine(point.nextPoints[0]);
-    }
-
-    ctx.moveTo(this.initPoint.x - angleModX, this.initPoint.y - angleModY);
-    moveLine(this.initPoint.nextPoints[0]);
+    ctx.moveTo(this.nodes[0].x, this.nodes[0].y);
+    ctx.lineTo(this.nodes[1].x, this.nodes[1].y);
 
     ctx.lineWidth = 1;
-    ctx.setLineDash([10, 15]);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#bb00f5';
     ctx.stroke();
     ctx.closePath();
-    ctx.setLineDash([]);
 
     ctx.resetTransform();
   }

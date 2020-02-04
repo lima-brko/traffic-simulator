@@ -106,15 +106,13 @@ class Junction {
     const beforeTransferPoint = new RoadPathNode({
       x: seg2.x,
       y: seg2.y,
-      roadPath,
-      maxSpeed: safeVelocity
+      roadPath
     });
     const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
     const transferPoint = new RoadPathNode({
       x: beforeTransferPoint.x,
       y: beforeTransferPoint.y,
-      roadPath: oppositeRoadPath,
-      maxSpeed: safeVelocity
+      roadPath: oppositeRoadPath
     });
     oppositeRoadPath
       .getNextNodeFrom(transferPoint.x, transferPoint.y)
@@ -153,8 +151,7 @@ class Junction {
     const transferPoint = new RoadPathNode({
       x: beforeTransferPoint.x,
       y: beforeTransferPoint.y,
-      roadPath: oppositeRoadPath,
-      maxSpeed: safeVelocity
+      roadPath: oppositeRoadPath
     });
     oppositeRoadPath
       .getNextNodeFrom(transferPoint.x, transferPoint.y)

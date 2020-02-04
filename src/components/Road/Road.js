@@ -45,13 +45,13 @@ class Road {
      * Adding nodes to way
      */
     way.addNode(
-      this.nodes[0].x + (sin * (contants.tileSize / 4)) + (sin * (this.roadLanes / 2) * halfTileSize),
-      this.nodes[0].y + (cos * (contants.tileSize / 4)) + (cos * (this.roadLanes / 2) * halfTileSize)
+      this.nodes[0].x + (sin * (this.roadLanes / 2) * halfTileSize),
+      this.nodes[0].y + (cos * (this.roadLanes / 2) * halfTileSize)
     );
 
     way.addNode(
-      this.nodes[1].x + (sin * (contants.tileSize / 4)) + (sin * (this.roadLanes / 2) * halfTileSize),
-      this.nodes[1].y + (cos * (contants.tileSize / 4)) + (cos * (this.roadLanes / 2) * halfTileSize)
+      this.nodes[1].x + (sin * (this.roadLanes / 2) * halfTileSize),
+      this.nodes[1].y + (cos * (this.roadLanes / 2) * halfTileSize)
     );
 
     /**
