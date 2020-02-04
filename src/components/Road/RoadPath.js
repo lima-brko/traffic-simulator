@@ -1,7 +1,6 @@
-import contants from '../../helpers/constants';
+import constants from '../../helpers/constants';
 import utils from '../../helpers/utils';
 import RoadPathNode from './RoadPathNode';
-import constants from '../../helpers/constants';
 import {safeVelocity} from '../Car';
 
 const colors = {
@@ -152,7 +151,7 @@ class RoadPath {
 
   drawDetailsOnCanvas(ctx) {
     const {way} = this;
-    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+    ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
 
     // Lines
     ctx.beginPath();
@@ -190,16 +189,16 @@ class RoadPath {
 
       ctx.beginPath();
       ctx.fillStyle = colors.ways[way.type];
-      edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
+      edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
       ctx.moveTo(edgeX, edgeY);
 
-      edgeX = point.x - Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      edgeY = point.y - Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
+      edgeX = point.x - Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      edgeY = point.y - Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
       ctx.lineTo(edgeX, edgeY);
 
-      edgeX = point.x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 8);
-      edgeY = point.y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 8);
+      edgeX = point.x + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 8);
+      edgeY = point.y + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 8);
       ctx.lineTo(edgeX, edgeY);
       ctx.fill();
       ctx.closePath();
@@ -295,7 +294,7 @@ class RoadPath {
     const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
     const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize;
 
-    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+    ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
 
     // Road lane dashed line
     ctx.beginPath();
