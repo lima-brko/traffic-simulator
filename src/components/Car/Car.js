@@ -155,16 +155,24 @@ class Car {
   }
 
   accelerate(expectVelocity) {
-    const nextVelocity = this.velocity + this.accelerationPower;
+    const nodeMaxSpeed = this.detailedRoute[this.detailedRouteIdx].maxSpeed;
+    let nextVelocity = this.velocity + this.accelerationPower;
 
-    if(expectVelocity && nextVelocity > expectVelocity) {
-      this.velocity = expectVelocity;
+    if(nodeMaxSpeed && this.velocity > nodeMaxSpeed) {
+      this.brake(nodeMaxSpeed);
       return;
     }
 
+    if(nodeMaxSpeed && nextVelocity > nodeMaxSpeed) {
+      nextVelocity = nodeMaxSpeed;
+    }
+
+    if(expectVelocity && nextVelocity > expectVelocity) {
+      nextVelocity = expectVelocity;
+    }
+
     if(nextVelocity > this.maxVelocity) {
-      this.velocity = this.maxVelocity;
-      return;
+      nextVelocity = this.maxVelocity;
     }
 
     this.velocity = nextVelocity;
@@ -467,10 +475,6 @@ class Car {
       return;
     }
 
-    if(this.changingLane) {
-      this.adjustVelocity(safeVelocity);
-    }
-
     this.accelerate();
   }
 
@@ -498,7 +502,8 @@ class Car {
       x: x + (Math.cos(utils.angleToRadians(roadPathAngle)) * (CarModel.carSize * 2)),
       y: y + (Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (CarModel.carSize * 2)),
       roadPath: this.currentRoadPath,
-      beforeLaneChange: true
+      beforeLaneChange: true,
+      maxSpeed: safeVelocity
     });
 
     const diagonalPos = {
@@ -525,7 +530,8 @@ class Car {
         y: intersection.y,
         roadPath: tempRoadPath,
         direction,
-        laneChange: true
+        laneChange: true,
+        maxSpeed: safeVelocity
       });
     }
 
@@ -558,5 +564,9 @@ class Car {
     this.calculateNextPosition();
   }
 }
+
+export {
+  safeVelocity
+};
 
 export default Car;

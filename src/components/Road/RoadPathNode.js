@@ -7,7 +7,8 @@ class RoadPathNode {
     this.vector3 = new Vector3(this.x, 0, this.y);
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
-    this.maxSpeed = null;
+    this.maxSpeed = props.maxSpeed || null;
+    this.laneChange = props.laneChange || false;
   }
 
   getBefore() {

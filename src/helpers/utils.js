@@ -110,23 +110,23 @@ const utils = {
     // if l1 and l2 are segments, they intersect if both of the above are true
     return result;
   },
+
+  /**
+   * Get number with limited decimals
+   * @param {number} number
+   * @param {number} decimals
+   */
   roundNumber(number, decimals) {
     const newnumber = Number(`${number}`).toFixed(parseInt(decimals, 10));
     return parseFloat(newnumber);
   },
+
+  /**
+   * Transform radians to angle
+   * @param {number} radians
+   */
   radiansToAngle(radians) {
     return radians * (180 / Math.PI);
-  },
-  getLinesAngle(A1x, A1y, A2x, A2y, B1x, B1y, B2x, B2y) {
-    const dAx = A2x - A1x;
-    const dAy = A2y - A1y;
-    const dBx = B2x - B1x;
-    const dBy = B2y - B1y;
-    let angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
-    if(angle < 0) {
-      angle *= -1;
-    }
-    return angle * (180 / Math.PI);
   },
 
   /**

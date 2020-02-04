@@ -3,6 +3,7 @@ import utils from '../../helpers/utils';
 import RoadPathNode from './RoadPathNode';
 import TrafficLight from './TrafficLight';
 import constants from '../../helpers/constants';
+import {safeVelocity} from '../Car';
 
 class Junction {
   constructor(roads, intersecX, intersecY) {
@@ -48,33 +49,6 @@ class Junction {
         });
       });
     });
-  }
-
-  static getClosestRightAngleNode(road, x, y, originWay, reverse = false) {
-    const mod = reverse ? -1 : 1;
-    let dist;
-    let minDist = null;
-    let closestNode = null;
-    road.ways.forEach((way) => {
-      way.getAllNodes().forEach((node) => {
-        if(node.x === x && node.y === y) {
-          return;
-        }
-
-        const angle = utils.getLinesAngle(originWay.nodes[0].x, originWay.nodes[0].y, x, y, x, y, node.x, node.y);
-
-        if(angle === 90 * mod) {
-          dist = utils.getPointsDistance(node.x, node.y, x, y);
-
-          if(!closestNode || dist < minDist) {
-            minDist = dist;
-            closestNode = node;
-          }
-        }
-      });
-    });
-
-    return closestNode;
   }
 
   createTrafficLight(road, oppositeRoad, way) {
@@ -132,13 +106,15 @@ class Junction {
     const beforeTransferPoint = new RoadPathNode({
       x: seg2.x,
       y: seg2.y,
-      roadPath
+      roadPath,
+      maxSpeed: safeVelocity
     });
     const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
     const transferPoint = new RoadPathNode({
       x: beforeTransferPoint.x,
       y: beforeTransferPoint.y,
-      roadPath: oppositeRoadPath
+      roadPath: oppositeRoadPath,
+      maxSpeed: safeVelocity
     });
     oppositeRoadPath
       .getNextNodeFrom(transferPoint.x, transferPoint.y)
@@ -169,14 +145,16 @@ class Junction {
     const beforeTransferPoint = new RoadPathNode({
       x: newPoint.x - Math.cos(utils.angleToRadians(roadPathAngle + 90)) * (contants.tileSize * 0.25),
       y: newPoint.y - Math.sin(utils.angleToRadians(roadPathAngle - 90)) * (contants.tileSize * 0.25),
-      roadPath
+      roadPath,
+      maxSpeed: safeVelocity
     });
 
     const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
     const transferPoint = new RoadPathNode({
       x: beforeTransferPoint.x,
       y: beforeTransferPoint.y,
-      roadPath: oppositeRoadPath
+      roadPath: oppositeRoadPath,
+      maxSpeed: safeVelocity
     });
     oppositeRoadPath
       .getNextNodeFrom(transferPoint.x, transferPoint.y)
