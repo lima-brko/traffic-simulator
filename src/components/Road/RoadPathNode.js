@@ -1,5 +1,4 @@
 import {Vector3} from 'three';
-import utils from '../../helpers/utils';
 
 class RoadPathNode {
   constructor(props) {
@@ -8,23 +7,7 @@ class RoadPathNode {
     this.vector3 = new Vector3(this.x, 0, this.y);
     this.nextPoints = [];
     this.roadPath = props.roadPath || null;
-  }
-
-  generatePathToAnyEndPoint() {
-    const roadWayNode = this.roadPath.roadWay.getClosestNode(this.x, this.y);
-
-    function move(point, path) {
-      path.push(point);
-
-      if(!point.nextPoints.length) {
-        return path;
-      }
-
-      const randomNextPoint = point.nextPoints[utils.getRandomInt(0, point.nextPoints.length)];
-      return move(randomNextPoint, path);
-    }
-
-    return move(this, []);
+    this.maxSpeed = null;
   }
 
   getBefore() {

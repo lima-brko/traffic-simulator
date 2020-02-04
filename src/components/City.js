@@ -130,10 +130,10 @@ class DarwinCity {
   }
 
   onCarBrake(car) {
-    const index = this.cars.findIndex((tmpCar) => tmpCar === car);
-    this.cars.splice(index, 1);
-    this.scene.remove(car.mesh);
-    this.scene.remove(car.routeTrace);
+    // const index = this.cars.findIndex((tmpCar) => tmpCar === car);
+    // this.cars.splice(index, 1);
+    // this.scene.remove(car.mesh);
+    // this.scene.remove(car.routeTrace);
     if(this.callbacks.carAccident) {
       this.callbacks.carAccident();
     }
@@ -181,6 +181,11 @@ class DarwinCity {
 
         for(let j = 0; j < this.cars.length; j++) {
           const car = this.cars[j];
+
+          if(car.currentRoadPath !== initPoints[i].roadPath) {
+            continue;
+          }
+
           const dist = car.mesh.position.distanceTo(initPointVec);
 
           if(!minDist) {

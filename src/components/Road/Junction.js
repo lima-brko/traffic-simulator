@@ -61,9 +61,6 @@ class Junction {
           return;
         }
 
-        // const diffX = node.x - x;
-        // const diffY = node.y - y;
-        // const angle = utils.calcAngleDegrees(diffX, diffY);
         const angle = utils.getLinesAngle(originWay.nodes[0].x, originWay.nodes[0].y, x, y, x, y, node.x, node.y);
 
         if(angle === 90 * mod) {

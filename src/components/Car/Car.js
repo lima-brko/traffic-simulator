@@ -8,6 +8,9 @@ import utils from '../../helpers/utils';
 import TrafficLight from '../Road/TrafficLight';
 import RoadPath from '../Road/RoadPath';
 
+const safeVelocity = 0.8;
+const safeCarDistance = CarModel.carSize * 2 + 5;
+
 class Car {
   constructor(props) {
     const {
@@ -39,12 +42,14 @@ class Car {
     this.navigation = Navigation;
     this.currentRouteTargetNode = null;
     this.currentRoadPath = null;
+    this.leftVelocity = 0;
+    this.changingLane = false;
 
     this.velocity = 0;
     this.brakePower = 0.1;
     this.accelerationPower = 0.01;
 
-    this.maxVelocity = utils.getRandomInt(15, 20) / 10;
+    this.maxVelocity = utils.getRandomInt(11, 17) / 10;
     this.callbacks = {
       onBrake: () => {},
       onArrival: () => {}
@@ -52,21 +57,25 @@ class Car {
 
     this.sensors = {};
 
+    const sensorNear = 5;
+    const sensorLongNear = CarModel.carSize / 2;
+    const sensorFar = this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 5;
+    const sensorLongFar = this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 20;
     [
-      ['front', 0],
-      ['left', 90],
-      ['right', -90],
-      ['fleft', 45],
-      ['fright', -45],
-      ['rleft', 135],
-      ['rright', -135]
+      ['front', 0, sensorLongNear, sensorLongFar],
+      ['left', 90, sensorNear, sensorFar],
+      ['right', -90, sensorNear, sensorFar],
+      ['fleft', 45, sensorNear, sensorFar],
+      ['fright', -45, sensorNear, sensorFar],
+      ['rleft', 135, sensorLongNear, sensorFar],
+      ['rright', -135, sensorLongNear, sensorFar]
     ].forEach((sensorData) => {
       this.sensors[sensorData[0]] = new CarSensor({
         name: sensorData[0],
         car: this,
         angle: sensorData[1],
-        near: CarModel.carSize / 2,
-        far: this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 10
+        near: sensorData[2],
+        far: sensorData[3]
       });
     });
     this.mesh.add(this.sensors.front.line);
@@ -110,11 +119,28 @@ class Car {
   }
 
   calculateNextPosition() {
+    const detailedNode = this.detailedRoute[this.detailedRouteIdx];
     const {x, y} = this.position;
+    const dist = utils.getPointsDistance(x, y, detailedNode.x, detailedNode.y);
     const radians = utils.angleToRadians(this.angle);
-    const newX = utils.roundNumber(x + Math.cos(radians) * this.velocity, 1);
-    const newY = utils.roundNumber(y - Math.sin(radians) * this.velocity, 1);
+    let velocity = this.leftVelocity ? this.leftVelocity : this.velocity;
+    const isFasterThanTarget = dist < velocity;
+
+    if(isFasterThanTarget) {
+      velocity = dist;
+      this.leftVelocity = velocity - dist;
+      this.setPosition(detailedNode.x, detailedNode.y);
+      this.update();
+      return;
+    }
+
+    const newX = utils.roundNumber(x + Math.cos(radians) * velocity, 1);
+    const newY = utils.roundNumber(y - Math.sin(radians) * velocity, 1);
     this.setPosition(newX, newY);
+
+    if(this.leftVelocity) {
+      this.leftVelocity = 0;
+    }
   }
 
   setRoute(routePath, callbacks) {
@@ -128,8 +154,14 @@ class Car {
     this.callbacks.onBrake = callbacks.onBrake;
   }
 
-  accelerate() {
+  accelerate(expectVelocity) {
     const nextVelocity = this.velocity + this.accelerationPower;
+
+    if(expectVelocity && nextVelocity > expectVelocity) {
+      this.velocity = expectVelocity;
+      return;
+    }
+
     if(nextVelocity > this.maxVelocity) {
       this.velocity = this.maxVelocity;
       return;
@@ -138,8 +170,23 @@ class Car {
     this.velocity = nextVelocity;
   }
 
-  brake() {
+  adjustVelocity(expectedVelocity) {
+    if(expectedVelocity < this.velocity) {
+      this.brake(expectedVelocity);
+      return;
+    }
+
+    this.accelerate(expectedVelocity);
+  }
+
+  brake(expectVelocity) {
     const nextVelocity = this.velocity - this.brakePower;
+
+    if(expectVelocity && nextVelocity < expectVelocity) {
+      this.velocity = expectVelocity;
+      return;
+    }
+
     if(nextVelocity < 0) {
       this.velocity = 0;
       return;
@@ -148,33 +195,22 @@ class Car {
     this.velocity = nextVelocity;
   }
 
-  // nextDetailedRoute() {
-  //   const routeNode = this.route[this.routeIdx];
-  //   const routeNodeIdx = this.currentTargetNode.nextPoints.indexOf(routeNode);
-
-  //   if(routeNodeIdx !== -1) {
-  //     this.currentTargetNode = routeNode;
-  //     return;
-  //   }
-
-  //   // eslint-disable-next-line prefer-destructuring
-  //   this.currentTargetNode = this.currentTargetNode.nextPoints[0];
-  // }
-
   onArriveDetailedRoute() {
     const detailedRouteNode = this.detailedRoute[this.detailedRouteIdx];
     const nextDetailedRouteNode = this.detailedRoute[this.detailedRouteIdx + 1];
 
     if(!nextDetailedRouteNode) {
+      this.changingLane = false;
       this.onArriveRoute();
       return;
     }
 
     this.detailedRouteIdx++;
+    this.changingLane = nextDetailedRouteNode.laneChange || nextDetailedRouteNode.beforeLaneChange;
 
-    if(detailedRouteNode.beforeLaneChange) {
-      this.currentRoadPath = nextDetailedRouteNode.roadPath;
-    }
+    // if(detailedRouteNode.beforeLaneChange) {
+    //   this.currentRoadPath = nextDetailedRouteNode.roadPath;
+    // }
 
     if(detailedRouteNode.laneChange) {
       this.currentRoadPath = detailedRouteNode.roadPath;
@@ -280,12 +316,15 @@ class Car {
     }
 
     // Sensors check
-    this.sensors.front.update(collidableList);
+    const sameWayCollidableList = collidableList.filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath.way === this.currentRoadPath.way));
+    this.sensors.front.update(sameWayCollidableList);
 
-    const sensorCollidableList = collidableList
-      .filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath === this.currentRoadPath));
-    this.sensors.fleft.update(sensorCollidableList);
-    this.sensors.fright.update(sensorCollidableList);
+    const frontDiagCollidableList = sameWayCollidableList;
+    // if(!this.changingLane) {
+    //   frontDiagCollidableList = collidableList.filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath === this.currentRoadPath));
+    // }
+    this.sensors.fleft.update(frontDiagCollidableList);
+    this.sensors.fright.update(frontDiagCollidableList);
 
     let detailRouteNode = this.detailedRoute[this.detailedRouteIdx];
     if(detailRouteNode.beforeLaneChange) {
@@ -332,45 +371,107 @@ class Car {
     this.detailedRouteIdx = 0;
   }
 
+  isInFrontOfMe(anotherCar) {
+    const refPoint = this.currentRoadPath.way.nodes[0];
+
+    const dist1 = utils.getPointsDistance(this.position.x, this.position.y, refPoint.x, refPoint.y);
+    const dist2 = utils.getPointsDistance(anotherCar.position.x, anotherCar.position.y, refPoint.x, refPoint.y);
+
+    return dist2 > dist1;
+  }
+
+  hasFrontDiagSensorActivate() {
+    const frontDiagSensors = [this.sensors.fleft, this.sensors.fright];
+
+    for(let i = 0; i < frontDiagSensors.length; i++) {
+      if(
+        frontDiagSensors[i].distance !== null &&
+        frontDiagSensors[i].collisionObj instanceof Car &&
+        (
+          frontDiagSensors[i].collisionObj.velocity !== 0 ||
+          this.currentRoadPath === frontDiagSensors[i].collisionObj.currentRoadPath ||
+          this.isInFrontOfMe(frontDiagSensors[i].collisionObj)
+        )
+        // frontDiagSensors[i].collisionObj.velocity >= this.velocity
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  hasSideOrRearSensorActivate() {
+    const sensors = [
+      this.sensors.left,
+      this.sensors.right,
+      this.sensors.rleft,
+      this.sensors.rright
+    ];
+    let sensorMinDist = null;
+    let sensorMin = null;
+
+    sensors.forEach((sensor) => {
+      if(sensor.distance === null) {
+        return;
+      }
+
+      if(!sensorMinDist || sensor.distance < sensorMinDist) {
+        sensorMin = sensor;
+        sensorMinDist = sensorMin.distance;
+      }
+    });
+
+    if(
+      sensorMin &&
+      sensorMin.collisionObj instanceof Car &&
+      sensorMin.collisionObj.velocity !== 0
+      // !sensorMin.collisionObj.changingLane
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   calculateCarReaction() {
     const endDistance = this.getLeftDistanceToEnd();
     const distanceToStop = this.getStoppingDistance(this.velocity);
     const detailedRouteNode = this.detailedRoute[this.detailedRouteIdx];
 
+    this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
+
     if(this.sensors.front.distance !== null) {
-      this.brake();
-      return;
-    }
-
-    let sensorMinDist = null;
-    let sensorMin = null;
-    Object.keys(this.sensors).forEach((sensorDirection) => {
-      if(this.sensors[sensorDirection].distance === null) {
-        return;
-      }
-
-      if(!sensorMinDist || this.sensors[sensorDirection].distance < sensorMinDist) {
-        sensorMin = this.sensors[sensorDirection];
-        sensorMinDist = sensorMin.distance;
-      }
-    });
-
-    if(sensorMin) {
-      if(sensorMin.collisionObj instanceof Car && (this.velocity > sensorMin.collisionObj.velocity || !sensorMin.collisionObj.velocity)) {
-        this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
-        this.accelerate();
+      if(this.sensors.front.collisionObj instanceof Car) {
+        const dist = utils.getPointsDistance(this.position.x, this.position.y, this.sensors.front.collisionObj.position.x, this.sensors.front.collisionObj.position.y);
+        this.adjustVelocity(this.sensors.front.collisionObj.velocity + (dist - safeCarDistance));
       } else {
         this.brake();
       }
       return;
     }
 
+    if(this.hasFrontDiagSensorActivate()) {
+      this.brake();
+      return;
+    }
+
+
+    if(this.hasSideOrRearSensorActivate()) {
+      this.brake();
+      return;
+    }
+
     if(endDistance <= distanceToStop) {
       this.brake();
-    } else {
-      this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
-      this.accelerate();
+      return;
     }
+
+    if(this.changingLane) {
+      this.adjustVelocity(safeVelocity);
+    }
+
+    this.accelerate();
   }
 
   getChangeLaneRoute(direction) {
@@ -394,8 +495,8 @@ class Car {
     let intersection;
 
     changingLaneNodes.push({
-      x: x + (Math.cos(utils.angleToRadians(roadPathAngle)) * 50),
-      y: y + (Math.sin(utils.angleToRadians(roadPathAngle * -1)) * 50),
+      x: x + (Math.cos(utils.angleToRadians(roadPathAngle)) * (CarModel.carSize * 2)),
+      y: y + (Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (CarModel.carSize * 2)),
       roadPath: this.currentRoadPath,
       beforeLaneChange: true
     });

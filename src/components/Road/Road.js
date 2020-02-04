@@ -110,12 +110,7 @@ class Road {
   }
 
   getInitPoints() {
-    const initPoints = [];
-    this.getRoadPaths().forEach((roadPath) => {
-      initPoints.push(roadPath.initPoint);
-    });
-
-    return initPoints;
+    return this.getRoadPaths().map((roadPath) => roadPath.initPoint);
   }
 
   drawOnCanvas(ctx) {
