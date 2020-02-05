@@ -112,7 +112,7 @@ class DarwinCity {
     this.roads.forEach((road) => {
       road.ways.forEach((way) => {
         way.updateNextNodes();
-        way.drawOnCanvas(ctx);
+        // way.drawOnCanvas(ctx);
       });
     });
   }

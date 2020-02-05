@@ -64,12 +64,10 @@ class Car {
     const sensorLongFar = this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 20;
     [
       ['front', 0, sensorLongNear, sensorLongFar],
-      ['left', 90, sensorNear, sensorFar],
-      ['right', -90, sensorNear, sensorFar],
+      ['left', 75, sensorNear, sensorFar],
+      ['right', -75, sensorNear, sensorFar],
       ['fleft', 30, sensorNear, sensorFar],
-      ['fright', -30, sensorNear, sensorFar],
-      ['rleft', 135, sensorLongNear, sensorFar],
-      ['rright', -135, sensorLongNear, sensorFar]
+      ['fright', -30, sensorNear, sensorFar]
     ].forEach((sensorData) => {
       this.sensors[sensorData[0]] = new CarSensor({
         name: sensorData[0],
@@ -79,13 +77,16 @@ class Car {
         far: sensorData[3]
       });
     });
+
+    this.showSensorsLights();
+  }
+
+  showSensorsLights() {
     this.mesh.add(this.sensors.front.line);
     this.mesh.add(this.sensors.left.line);
     this.mesh.add(this.sensors.right.line);
     this.mesh.add(this.sensors.fleft.line);
     this.mesh.add(this.sensors.fright.line);
-    this.mesh.add(this.sensors.rleft.line);
-    this.mesh.add(this.sensors.rright.line);
   }
 
   getLeftDistanceToEnd() {
@@ -332,14 +333,8 @@ class Car {
 
     const sameWayCollidableList = collidableList.filter((obj) => !(obj instanceof Car) || (obj instanceof Car && validWays.indexOf(obj.currentRoadPath.way) !== -1));
     this.sensors.front.update(sameWayCollidableList);
-
-    const frontDiagCollidableList = sameWayCollidableList;
-    // if(!this.changingLane) {
-    //   frontDiagCollidableList = collidableList.filter((obj) => !(obj instanceof Car) || (obj instanceof Car && obj.currentRoadPath === this.currentRoadPath));
-    // }
-    this.sensors.fleft.update(frontDiagCollidableList);
-    this.sensors.fright.update(frontDiagCollidableList);
-
+    this.sensors.fleft.update(sameWayCollidableList);
+    this.sensors.fright.update(sameWayCollidableList);
 
     if(detailRouteNode.beforeLaneChange) {
       detailRouteNode = this.detailedRoute[this.detailedRouteIdx + 1];
@@ -349,7 +344,6 @@ class Car {
       const sideSensorCollidableList = collidableList
         .filter((obj) => obj instanceof Car && obj.currentRoadPath === detailRouteNode.roadPath);
       this.sensors[detailRouteNode.direction].update(sideSensorCollidableList);
-      this.sensors[`r${detailRouteNode.direction}`].update(sideSensorCollidableList);
     }
   }
 
@@ -394,6 +388,19 @@ class Car {
     return dist2 > dist1;
   }
 
+  hasFrontSensorActivate() {
+    if(this.sensors.front.distance !== null) {
+      // if(!this.sensors.front.isCollidingTrafficLight()) {
+      //   const dist = utils.getPointsDistance(this.position.x, this.position.y, this.sensors.front.collisionObj.position.x, this.sensors.front.collisionObj.position.y);
+      //   this.adjustVelocity(this.sensors.front.collisionObj.velocity + (dist - safeCarDistance));
+      // } else {
+      return true;
+      // }
+    }
+
+    return false;
+  }
+
   hasFrontDiagSensorActivate() {
     const frontDiagSensors = [this.sensors.fleft, this.sensors.fright];
 
@@ -402,7 +409,7 @@ class Car {
         frontDiagSensors[i].distance !== null &&
         frontDiagSensors[i].collisionObj instanceof Car &&
         (
-          frontDiagSensors[i].collisionObj.velocity !== 0 ||
+          (frontDiagSensors[i].collisionObj.velocity !== 0 && frontDiagSensors[i].distance > safeCarDistance) ||
           this.currentRoadPath === frontDiagSensors[i].collisionObj.currentRoadPath ||
           // frontDiagSensors[i].collisionObj.changingLane ||
           this.isInFrontOfMe(frontDiagSensors[i].collisionObj)
@@ -416,12 +423,10 @@ class Car {
     return false;
   }
 
-  hasSideOrRearSensorActivate() {
+  hasSideSensorActivate() {
     const sensors = [
       this.sensors.left,
-      this.sensors.right,
-      this.sensors.rleft,
-      this.sensors.rright
+      this.sensors.right
     ];
     let sensorMinDist = null;
     let sensorMin = null;
@@ -440,8 +445,10 @@ class Car {
     if(
       sensorMin &&
       sensorMin.collisionObj instanceof Car &&
-      sensorMin.collisionObj.velocity !== 0
-      // !sensorMin.collisionObj.changingLane
+      (
+        sensorMin.collisionObj.velocity !== 0 ||
+        (sensorMin.collisionObj.changingLane && this.isInFrontOfMe(sensorMin.collisionObj))
+      )
     ) {
       return true;
     }
@@ -456,13 +463,8 @@ class Car {
 
     this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
 
-    if(this.sensors.front.distance !== null) {
-      if(!this.sensors.front.isCollidingTrafficLight()) {
-        const dist = utils.getPointsDistance(this.position.x, this.position.y, this.sensors.front.collisionObj.position.x, this.sensors.front.collisionObj.position.y);
-        this.adjustVelocity(this.sensors.front.collisionObj.velocity + (dist - safeCarDistance));
-      } else {
-        this.brake();
-      }
+    if(this.hasFrontSensorActivate()) {
+      this.brake();
       return;
     }
 
@@ -472,7 +474,7 @@ class Car {
     }
 
 
-    if(this.hasSideOrRearSensorActivate()) {
+    if(this.hasSideSensorActivate()) {
       this.brake();
       return;
     }
