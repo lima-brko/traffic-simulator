@@ -31,6 +31,7 @@ class TrafficLight {
 
     this.mesh.position.set(this.x, 0, this.y);
     this.mesh.rotation.y = utils.angleToRadians((this.roadPaths[0].getAngle() * -1) - 90);
+    this.availableRoadPaths = props.availableRoadPaths || [];
   }
 
   updateMeshs() {
@@ -111,11 +112,10 @@ class TrafficLight {
 
       light.position.y = 26;
       light.position.z = 1;
-      light.position.x = -13 + (i * 4);
+      light.position.x = -15 + (i * 4);
       this.lightsMesh[state] = light;
       tfGroup.add(light);
     });
-
 
     return tfGroup;
   }

@@ -58,16 +58,16 @@ class Car {
 
     this.sensors = {};
 
-    const sensorNear = 5;
+    const sensorNear = 7;
     const sensorLongNear = CarModel.carSize / 2;
     const sensorFar = this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 5;
     const sensorLongFar = this.getStoppingDistance(this.maxVelocity) + (CarModel.carSize / 2) + 20;
     [
       ['front', 0, sensorLongNear, sensorLongFar],
+      ['fleft', 30, sensorNear + 5, sensorFar + 5],
+      ['fright', -30, sensorNear + 5, sensorFar + 5],
       ['left', 75, sensorNear, sensorFar],
-      ['right', -75, sensorNear, sensorFar],
-      ['fleft', 30, sensorNear, sensorFar],
-      ['fright', -30, sensorNear, sensorFar]
+      ['right', -75, sensorNear, sensorFar]
     ].forEach((sensorData) => {
       this.sensors[sensorData[0]] = new CarSensor({
         name: sensorData[0],
@@ -78,7 +78,7 @@ class Car {
       });
     });
 
-    this.showSensorsLights();
+    // this.showSensorsLights();
   }
 
   showSensorsLights() {
@@ -463,27 +463,22 @@ class Car {
 
     this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
 
-    if(this.hasFrontSensorActivate()) {
+    if(
+      this.hasFrontSensorActivate() ||
+      this.hasFrontDiagSensorActivate() ||
+      this.hasSideSensorActivate() ||
+      endDistance <= distanceToStop
+    ) {
       this.brake();
+
+      if(this.velocity) {
+        this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
+      }
+
       return;
     }
 
-    if(this.hasFrontDiagSensorActivate()) {
-      this.brake();
-      return;
-    }
-
-
-    if(this.hasSideSensorActivate()) {
-      this.brake();
-      return;
-    }
-
-    if(endDistance <= distanceToStop) {
-      this.brake();
-      return;
-    }
-
+    this.setAngleTo(detailedRouteNode.x, detailedRouteNode.y);
     this.accelerate();
   }
 

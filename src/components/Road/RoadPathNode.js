@@ -11,6 +11,7 @@ class RoadPathNode {
     this.direction = props.direction || null;
     this.laneChange = props.laneChange || false;
     this.beforeLaneChange = props.beforeLaneChange || false;
+    this.transferTo = props.transferTo || null;
   }
 
   getBefore() {

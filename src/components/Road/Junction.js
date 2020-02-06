@@ -70,7 +70,8 @@ class Junction {
       junction: this,
       x: seg2.x,
       y: seg2.y,
-      roadPaths: way.lanes
+      roadPaths: way.lanes,
+      availableRoadPaths: way.lanes.length > 1 ? way.lanes[way.lanes.length - 1] : []
     });
 
     this.trafficLights.push(trafficLight);
@@ -92,7 +93,7 @@ class Junction {
       }
     ];
 
-    const newPoint = roadPath.createNodeOnLineIntersect(oppositeRoadLine);
+    const newPoint = roadPath.createNodeOnLineIntersection(oppositeRoadLine);
 
     const seg1 = {
       x: newPoint.x + Math.cos(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick + constants.quarterTileSize),
@@ -127,22 +128,49 @@ class Junction {
     const oppositeRoadThick = oppositeRoad.getWay('even').lanes.length * constants.halfTileSize;
     const roadPathAngle = roadPath.getAngle();
 
-    const oppositeRoadLine = [
+    const prepareToTransferLine = [
       {
-        x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize),
-        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick - constants.quarterTileSize)
+        x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick + 50),
+        y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick + 50)
       },
       {
-        x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick - constants.quarterTileSize),
-        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick - constants.quarterTileSize)
+        x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * (oppositeRoadThick + 50),
+        y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (oppositeRoadThick + 50)
       }
     ];
+    const prepareToTransferPoint = roadPath.createNodeOnLineIntersection(prepareToTransferLine);
 
-    const newPoint = roadPath.createNodeOnLineIntersect(oppositeRoadLine);
+    // const trafficLightLine = [
+    //   {
+    //     x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
+    //     y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
+    //   },
+    //   {
+    //     x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
+    //     y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
+    //   }
+    // ];
+    // const trafficLightPoint = roadPath.createNodeOnLineIntersection(trafficLightLine);
+
+    const trafficLightPoint = new RoadPathNode({
+      x: prepareToTransferPoint.x + Math.cos(utils.angleToRadians(roadPathAngle * -1)) * (constants.quarterTileSize + 50 - constants.quarterTileSize),
+      y: prepareToTransferPoint.y + Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (constants.quarterTileSize + 50 - constants.quarterTileSize),
+      roadPath
+    });
+    trafficLightPoint.maxSpeed = safeVelocity;
+
+    const seg1 = {
+      x: trafficLightPoint.x + Math.cos(utils.angleToRadians(roadPathAngle * -1)) * constants.quarterTileSize,
+      y: trafficLightPoint.y + Math.sin(utils.angleToRadians(roadPathAngle * -1)) * constants.quarterTileSize
+    };
+    const seg2 = {
+      x: seg1.x + Math.cos(utils.angleToRadians(roadPathAngle - 90)) * constants.quarterTileSize,
+      y: seg1.y + Math.sin(utils.angleToRadians(roadPathAngle + 90)) * constants.quarterTileSize
+    };
 
     const beforeTransferPoint = new RoadPathNode({
-      x: newPoint.x - Math.cos(utils.angleToRadians(roadPathAngle + 90)) * (contants.tileSize * 0.25),
-      y: newPoint.y - Math.sin(utils.angleToRadians(roadPathAngle - 90)) * (contants.tileSize * 0.25),
+      x: seg2.x,
+      y: seg2.y,
       roadPath,
       maxSpeed: safeVelocity
     });
@@ -157,7 +185,9 @@ class Junction {
       .getNextNodeFrom(transferPoint.x, transferPoint.y)
       .addBefore(transferPoint);
 
-    newPoint.addNextPoint(beforeTransferPoint);
+    prepareToTransferPoint.addNextPoint(trafficLightPoint);
+    prepareToTransferPoint.transferTo = oppositeRoadPath;
+    trafficLightPoint.addNextPoint(beforeTransferPoint);
     beforeTransferPoint.addNextPoint(transferPoint);
     this.transferNodes.push(beforeTransferPoint);
   }

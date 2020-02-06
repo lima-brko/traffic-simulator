@@ -109,6 +109,9 @@ class DarwinCity {
 
     this.roads.forEach((road) => road.drawOnCanvas(ctx));
     this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
+    this.roads.forEach((road) => road.getRoadPaths().forEach((roadPath) => {
+      roadPath.drawDetailsOnCanvas(ctx);
+    }));
     this.roads.forEach((road) => {
       road.ways.forEach((way) => {
         way.updateNextNodes();

@@ -62,7 +62,7 @@ class RoadPath {
     return compare(this.initPoint);
   }
 
-  createNodeOnLineIntersect(line) {
+  createNodeOnLineIntersection(line) {
     const startNode = this.initPoint;
     const endNode = this.getDeepestPoint();
     const intersection = utils.getLinesIntersection(
@@ -282,8 +282,6 @@ class RoadPath {
   }
 
   drawOnCanvas(ctx) {
-    // this.drawDetailsOnCanvas(ctx);
-
     if(this.order === 0) {
       return;
     }
