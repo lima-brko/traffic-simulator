@@ -331,7 +331,11 @@ class DarwinCity {
 
     const carRoadPath = car.currentRoadPath;
     const trafficLights = this.trafficLights.filter((trafficLight) => {
-      if(!trafficLight.active || (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green')) {
+      if(
+        !trafficLight.active ||
+        (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green') ||
+        (car.transferingToPath && trafficLight.availableRoadPaths.indexOf(car.transferingToPath) !== -1)
+      ) {
         return false;
       }
 

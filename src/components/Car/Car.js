@@ -45,6 +45,7 @@ class Car {
     this.currentRoadPath = null;
     this.leftVelocity = 0;
     this.changingLane = false;
+    this.transferingToPath = null;
 
     this.velocity = 0;
     this.brakePower = 0.07;
@@ -223,6 +224,14 @@ class Car {
 
     if(detailedRouteNode.laneChange) {
       this.currentRoadPath = detailedRouteNode.roadPath;
+    }
+
+    if(nextDetailedRouteNode.transferTo) {
+      this.transferingToPath = nextDetailedRouteNode.transferTo;
+    }
+
+    if(this.transferingToPath === this.currentRoadPath) {
+      this.transferingToPath = null;
     }
   }
 

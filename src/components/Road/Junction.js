@@ -66,12 +66,19 @@ class Junction {
       y: seg1.y - Math.sin(utils.angleToRadians(roadPathAngle - 90)) * roadThick
     };
 
+    const availableRoadPaths = [];
+    if(way.lanes.length) {
+      const lastRoadPath = way.lanes[way.lanes.length - 1];
+      const transferNode = this.transferNodes.find((node) => node.roadPath === lastRoadPath);
+      availableRoadPaths.push(transferNode.nextPoints[0].roadPath);
+    }
+
     const trafficLight = new TrafficLight({
       junction: this,
       x: seg2.x,
       y: seg2.y,
       roadPaths: way.lanes,
-      availableRoadPaths: way.lanes.length > 1 ? way.lanes[way.lanes.length - 1] : []
+      availableRoadPaths
     });
 
     this.trafficLights.push(trafficLight);
@@ -110,6 +117,8 @@ class Junction {
       roadPath
     });
     const oppositeRoadPath = oppositeRoad.findClosestRoadPath(beforeTransferPoint.x, beforeTransferPoint.y);
+    beforeTransferPoint.transferTo = oppositeRoadPath;
+
     const transferPoint = new RoadPathNode({
       x: beforeTransferPoint.x,
       y: beforeTransferPoint.y,
@@ -186,8 +195,8 @@ class Junction {
       .addBefore(transferPoint);
 
     prepareToTransferPoint.addNextPoint(trafficLightPoint);
-    prepareToTransferPoint.transferTo = oppositeRoadPath;
     trafficLightPoint.addNextPoint(beforeTransferPoint);
+    trafficLightPoint.transferTo = oppositeRoadPath;
     beforeTransferPoint.addNextPoint(transferPoint);
     this.transferNodes.push(beforeTransferPoint);
   }
