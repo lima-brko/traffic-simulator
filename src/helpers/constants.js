@@ -7,7 +7,7 @@ export default {
   worldWidth: 1250,
   worldHeight: 1250,
   carTotal: 40,
-  roadsTotal: 2,
+  roadsTotal: 4,
   roadLanes: 3,
   colors: {
     road: '#989899'

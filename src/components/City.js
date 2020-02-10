@@ -69,6 +69,7 @@ class DarwinCity {
     const ctx = this.groundCanvas.getContext('2d');
     const axes = ['Row', 'Col'];
 
+    // Create Roads
     for(let i = 0; i < constants.roadsTotal; i++) {
       const axis = axes[i % 2];
       const counter = Math.floor(i / 2);
@@ -87,13 +88,10 @@ class DarwinCity {
         roadLanes: constants.roadLanes
       });
 
-      // tiles.forEach((tile) => {
-      //   this.matrix.setTileContent(tile.x, tile.y, road);
-      // });
-
       this.roads.push(road);
     }
 
+    // Create Junctions
     for(let i = 0; i < this.roads.length; i++) {
       const road1 = this.roads[i];
       for(let j = i + 1; j < this.roads.length; j++) {
@@ -102,22 +100,27 @@ class DarwinCity {
         const junction = Road.createRoadsJunctions(road1, road2);
         if(junction) {
           this.junctions.push(junction);
-          // this.matrix.setTileContent(junction.tile.x, junction.tile.y, junction);
         }
       }
     }
 
-    this.roads.forEach((road) => road.drawOnCanvas(ctx));
-    this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
-    this.roads.forEach((road) => road.getRoadPaths().forEach((roadPath) => {
-      roadPath.drawDetailsOnCanvas(ctx);
-    }));
+    this.junctions.forEach((junction) => junction.connectWayTransfers());
+
     this.roads.forEach((road) => {
       road.ways.forEach((way) => {
         way.updateNextNodes();
-        // way.drawOnCanvas(ctx);
       });
     });
+
+    // Draw Roads on canvas
+    this.roads.forEach((road) => road.drawOnCanvas(ctx));
+    this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
+    // this.roads.forEach((road) => road.getRoadPaths().forEach((roadPath) => {
+    //   roadPath.drawDetailsOnCanvas(ctx);
+    // }));
+    // this.roads.forEach((road) => {
+    //   road.ways.forEach((way) => way.drawOnCanvas(ctx));
+    // });
   }
 
   createCarRouteTrace(car) {

@@ -36,7 +36,9 @@ class Junction {
 
       way.addTransferNode(pointOnLine.point.x, pointOnLine.point.y, transferNode);
     });
+  }
 
+  connectWayTransfers() {
     this.roads.forEach((road) => {
       road.ways.forEach((way) => {
         way.transferNodes.forEach((transferNode) => {
@@ -148,19 +150,6 @@ class Junction {
       }
     ];
     const prepareToTransferPoint = roadPath.createNodeOnLineIntersection(prepareToTransferLine);
-
-    // const trafficLightLine = [
-    //   {
-    //     x: oppositeRoad.nodes[0].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
-    //     y: oppositeRoad.nodes[0].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
-    //   },
-    //   {
-    //     x: oppositeRoad.nodes[1].x - Math.cos(utils.angleToRadians(roadPathAngle)) * oppositeRoadThick,
-    //     y: oppositeRoad.nodes[1].y - Math.sin(utils.angleToRadians(roadPathAngle * -1)) * oppositeRoadThick
-    //   }
-    // ];
-    // const trafficLightPoint = roadPath.createNodeOnLineIntersection(trafficLightLine);
-
     const trafficLightPoint = new RoadPathNode({
       x: prepareToTransferPoint.x + Math.cos(utils.angleToRadians(roadPathAngle * -1)) * (constants.quarterTileSize + 50 - constants.quarterTileSize),
       y: prepareToTransferPoint.y + Math.sin(utils.angleToRadians(roadPathAngle * -1)) * (constants.quarterTileSize + 50 - constants.quarterTileSize),

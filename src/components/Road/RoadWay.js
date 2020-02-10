@@ -136,13 +136,35 @@ class RoadWay {
   drawOnCanvas(ctx) {
     ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
 
-    // Road lane dashed line
-    ctx.beginPath();
-    ctx.moveTo(this.nodes[0].x, this.nodes[0].y);
-    ctx.lineTo(this.nodes[1].x, this.nodes[1].y);
+    this.getAllNodes().forEach((node) => {
+      ctx.beginPath();
+      ctx.fillStyle = '#bb00f5';
+      ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
+      ctx.lineWidth = 1;
+      ctx.fill();
+      ctx.closePath();
+    });
 
+
+    // Lines
+    ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#bb00f5';
+
+    function drawLines(node) {
+      node.nextNodes.forEach((nextNode) => {
+        if(node.way !== nextNode.way) {
+          return;
+        }
+
+        ctx.moveTo(node.x, node.y);
+        ctx.lineTo(nextNode.x, nextNode.y);
+
+        drawLines(nextNode);
+      });
+    }
+    drawLines(this.nodes[0]);
+
     ctx.stroke();
     ctx.closePath();
 
