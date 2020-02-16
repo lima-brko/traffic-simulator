@@ -22,10 +22,13 @@ import constants from '../helpers/constants';
 import utils from '../helpers/utils';
 
 class DarwinCity {
-  constructor() {
+  constructor(props) {
     this.scene = new Scene();
     this.scene.background = new Color(0xfae0cb);
 
+    this.carsTotal = props.carsTotal;
+    this.roadsTotal = props.roadsTotal;
+    this.roadLanes = props.roadLanes;
     this.tileSize = constants.tileSize;
     this.width = constants.worldWidth;
     this.height = constants.worldHeight;
@@ -70,11 +73,11 @@ class DarwinCity {
     const axes = ['Row', 'Col'];
 
     // Create Roads
-    for(let i = 0; i < constants.roadsTotal; i++) {
+    for(let i = 0; i < this.roadsTotal; i++) {
       const axis = axes[i % 2];
       const counter = Math.floor(i / 2);
-      const tileMod = i % 2 === 0 ? 0 : constants.roadsTotal % 2;
-      const tilePart = Math.floor(this.matrix.size / (Math.ceil(constants.roadsTotal / 2) + 1 - tileMod));
+      const tileMod = i % 2 === 0 ? 0 : this.roadsTotal % 2;
+      const tilePart = Math.floor(this.matrix.size / (Math.ceil(this.roadsTotal / 2) + 1 - tileMod));
       const tileIndex = tilePart + (tilePart * counter);
       const firstTile = axis === 'Col' ? this.matrix.getTile(tileIndex, 0) : this.matrix.getTile(0, tileIndex);
       const lastTile = axis === 'Col' ? this.matrix.getTile(tileIndex, this.matrix.size - 1) : this.matrix.getTile(this.matrix.size - 1, tileIndex);
@@ -85,7 +88,7 @@ class DarwinCity {
           new RoadNode({x: firstTile.sceneX, y: firstTile.sceneY}),
           new RoadNode({x: lastTile.sceneX, y: lastTile.sceneY})
         ],
-        roadLanes: constants.roadLanes
+        roadLanes: this.roadLanes
       });
 
       this.roads.push(road);
@@ -217,7 +220,7 @@ class DarwinCity {
   }
 
   populateCars() {
-    const onQueueCars = constants.carTotal - this.cars.length;
+    const onQueueCars = this.carsTotal - this.cars.length;
 
     if(onQueueCars === 0) {
       return;

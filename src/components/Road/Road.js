@@ -160,10 +160,10 @@ class Road {
     ctx.closePath();
 
     // Road Name
-    ctx.textAlign = 'center';
-    ctx.font = '11px Verdana';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(this.name, firstNode.x, firstNode.y);
+    // ctx.textAlign = 'center';
+    // ctx.font = '11px Verdana';
+    // ctx.fillStyle = '#fff';
+    // ctx.fillText(this.name, firstNode.x, firstNode.y);
 
     // Road center line
     ctx.beginPath();

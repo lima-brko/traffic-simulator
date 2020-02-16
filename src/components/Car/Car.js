@@ -51,7 +51,7 @@ class Car {
     this.brakePower = 0.07;
     this.accelerationPower = 0.01;
 
-    this.maxVelocity = utils.getRandomInt(11, 17) / 10;
+    this.maxVelocity = utils.getRandomInt(11, 14) / 10;
     this.callbacks = {
       onBrake: () => {},
       onArrival: () => {}
@@ -340,7 +340,11 @@ class Car {
       validWays.push(this.changingWay);
     }
 
-    const sameWayCollidableList = collidableList.filter((obj) => !(obj instanceof Car) || (obj instanceof Car && validWays.indexOf(obj.currentRoadPath.way) !== -1));
+    const sameWayCollidableList = collidableList.filter(
+      (obj) => !(obj instanceof Car) ||
+               (obj instanceof Car && validWays.indexOf(obj.currentRoadPath.way) !== -1) ||
+               (obj instanceof Car && obj.changingWay)
+    );
     this.sensors.front.update(sameWayCollidableList);
     this.sensors.fleft.update(sameWayCollidableList);
     this.sensors.fright.update(sameWayCollidableList);

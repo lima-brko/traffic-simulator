@@ -295,16 +295,25 @@ class RoadPath {
     // Road lane dashed line
     ctx.beginPath();
     function moveLine(point) {
-      ctx.lineTo(point.x - angleModX, point.y - angleModY);
-
-      if(!point.nextPoints.length) {
+      if(point.nextPoints.length) {
+        ctx.lineTo(point.x - angleModX, point.y - angleModY);
+      } else {
+        const lastNodePos = {
+          x: (point.x - angleModX) - (Math.sin(utils.angleToRadians(angle - 90)) * constants.halfTileSize),
+          y: (point.y - angleModY) - (Math.cos(utils.angleToRadians(angle - 90)) * constants.halfTileSize)
+        };
+        ctx.lineTo(lastNodePos.x, lastNodePos.y);
         return false;
       }
 
       return moveLine(point.nextPoints[0]);
     }
 
-    ctx.moveTo(this.initPoint.x - angleModX, this.initPoint.y - angleModY);
+    const firstNodePos = {
+      x: (this.initPoint.x - angleModX) - (Math.sin(utils.angleToRadians(angle + 90)) * constants.halfTileSize),
+      y: (this.initPoint.y - angleModY) - (Math.cos(utils.angleToRadians(angle + 90)) * constants.halfTileSize)
+    };
+    ctx.moveTo(firstNodePos.x, firstNodePos.y);
     moveLine(this.initPoint.nextPoints[0]);
 
     ctx.lineWidth = 1;
