@@ -2,16 +2,41 @@
 <html>
   <head>
     <title>Traffic Simulator</title>
-  <link href="vendors.fbb229e04f983a39e151.bundle.css" rel="stylesheet"><link href="app.fbb229e04f983a39e151.bundle.css" rel="stylesheet"></head>
+  <link href="vendors.023c9e2408dc6bdbca07.bundle.css" rel="stylesheet"><link href="app.023c9e2408dc6bdbca07.bundle.css" rel="stylesheet"></head>
   <body>
-    <h1>Traffic Simulator</h1>
-    <div id="scene"></div>
-    <div class="display">
+    <div class="container">
+      <h1>Traffic Simulator</h1>
       <ul>
-        <li>Car accidents: <span id="car_accident_count">0</span></li>
-        <li>Car arrivals: <span id="car_arrival_count">0</span></li>
-        <li><button type="button" id="btn_toggle_traffic_signals">Deactivate Traffic Signals</button></li>
+        <li class="item-arrivals">Car arrivals: <strong id="car_arrival_count">0</strong></li>
+        <li class="item-accidents">Car accidents: <strong id="car_accident_count">0</strong></li>
+        <li>
+          <label class="custom-control-label" for="btn_toggle_traffic_signals">Traffic Signals
+            <input type="checkbox" checked id="btn_toggle_traffic_signals">
+            <div class="fake-switch"></div>
+          </label>
+        </li>
       </ul>
+      <ul>
+        <li id="control_carsTotal">
+          Cars total <strong>40</strong>
+          <div><input type="range" min="1" max="50" step="1"></div>
+        </li>
+        <li id="control_roadsTotal">
+          Roads total <strong>4</strong>
+          <div><input type="range" min="1" max="6" step="1"></div>
+        </li>
+        <li id="control_roadLanes">
+          Lanes in road <strong>3</strong>
+          <div><input type="range" min="1" max="4" step="1"></div>
+        </li>
+        <li>
+          <button class="btn" id="btn_generate_city">Simulate</button>
+        </li>
+      </ul>
+      <p>
+        Developed by <a href="https://github.com/fill-lima" target="_blank">Felipe Lima</a>
+      </p>
     </div>
-  <script type="text/javascript" src="runtime.fbb229e04f983a39e151.bundle.js"></script><script type="text/javascript" src="vendors.fbb229e04f983a39e151.bundle.js"></script><script type="text/javascript" src="app.fbb229e04f983a39e151.bundle.js"></script></body>
+    <div id="scene"></div>
+  <script type="text/javascript" src="runtime.023c9e2408dc6bdbca07.bundle.js"></script><script type="text/javascript" src="vendors.023c9e2408dc6bdbca07.bundle.js"></script><script type="text/javascript" src="app.023c9e2408dc6bdbca07.bundle.js"></script></body>
 </html>

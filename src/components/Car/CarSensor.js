@@ -6,6 +6,8 @@ import {
   Geometry
 
 } from 'three';
+import utils from '../../helpers/utils';
+import TrafficLight from '../Road/TrafficLight';
 
 const materials = {
   green: new LineBasicMaterial({
@@ -20,9 +22,12 @@ class CarSensor {
   constructor(props) {
     this.name = props.name;
     this.car = props.car;
+    this.angle = props.angle;
     this.near = props.near;
     this.far = props.far;
     this.distance = null;
+    this.collisions = null;
+    this.collisionObj = null;
     this.raycaster = new Raycaster();
     this.raycaster.near = props.near;
     this.raycaster.far = props.far;
@@ -32,9 +37,13 @@ class CarSensor {
 
   createLine() {
     const geometry = new Geometry();
+    const nearX = Math.cos(utils.angleToRadians(this.angle + 90)) * this.near;
+    const nearY = Math.sin(utils.angleToRadians(this.angle + 90)) * this.near;
+    const farX = Math.cos(utils.angleToRadians(this.angle + 90)) * this.far;
+    const farY = Math.sin(utils.angleToRadians(this.angle + 90)) * this.far;
     geometry.vertices.push(
-      new Vector3(0, this.near, 6),
-      new Vector3(0, this.far, 6)
+      new Vector3(nearX, nearY, 6),
+      new Vector3(farX, farY, 6)
     );
     const line = new Line(geometry, materials.green);
     line.name = 'sensor';
@@ -47,15 +56,32 @@ class CarSensor {
     }
   }
 
+  isCollidingTrafficLight() {
+    if(!this.collisions) {
+      return false;
+    }
+
+    for(let i = 0; i < this.collisions.length; i++) {
+      if(this.collisions[i] instanceof TrafficLight) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   reset() {
     this.setLineMaterial(materials.green);
     this.distance = null;
+    this.collisions = null;
+    this.collisionObj = null;
   }
 
-  update(collidableMeshList) {
+  update(collidableList) {
+    const collidableMeshList = collidableList.map((obj) => obj.hitboxMesh);
     const localVertex = this.line.geometry.vertices[1].clone();
-    const globalVertex = localVertex.applyMatrix4(this.line.parent.matrix);
-    const directionVector = globalVertex.sub(this.line.parent.position);
+    const globalVertex = localVertex.applyMatrix4(this.car.mesh.matrix);
+    const directionVector = globalVertex.sub(this.car.mesh.position);
 
     this.raycaster.set(this.car.mesh.position.clone(), directionVector.clone().normalize());
 
@@ -69,6 +95,8 @@ class CarSensor {
         return acc;
       });
 
+      this.collisions = collisions.map((collision) => collidableList[collidableMeshList.indexOf(collision.object)]);
+      this.collisionObj = collidableList[collidableMeshList.indexOf(closestCollision.object)];
       this.distance = closestCollision.distance;
       this.setLineMaterial(materials.yellow);
     } else {
