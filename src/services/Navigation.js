@@ -1,103 +1,158 @@
-import WorldMatrix from './WorldMatrix';
-
-class Location {
-  constructor(props) {
-    this.x = props.x;
-    this.y = props.y;
-    this.path = props.path || [];
-    this.status = 'Unknown';
-  }
-}
+import utils from '../helpers/utils';
 
 class Navigation {
   constructor() {
-    this.matrix = WorldMatrix;
-    this.fromLocation = null;
-    this.toLocation = null;
-    this.activeRoadMatrix = null;
+    this.routes = [];
   }
 
-  verifyLocationStatus(location) {
-    const {x, y} = location;
+  static findLowestCostNode(costs, processed) {
+    const knownNodes = Object.keys(costs);
 
-    if(x < 0 ||
-      x >= this.matrix.size ||
-      y < 0 ||
-      y >= this.matrix.size) {
-      return 'Invalid';
-    }
-
-    const tile = this.activeRoadMatrix[x][y];
-
-    if(x === this.toLocation.x && y === this.toLocation.y) {
-      return 'Goal';
-    }
-
-    if(!tile.roads.length || tile.isVisited) {
-      return 'Blocked';
-    }
-
-    return 'Valid';
-  }
-
-  exploreInDirection(currentLocation, direction) {
-    let {y, x} = currentLocation;
-
-    const newPath = currentLocation.path.slice();
-    newPath.push(this.matrix.getTile(x, y));
-
-    if(direction === 'North') {
-      y -= 1;
-    } else if(direction === 'East') {
-      x += 1;
-    } else if(direction === 'South') {
-      y += 1;
-    } else if(direction === 'West') {
-      x -= 1;
-    }
-
-    const newLocation = new Location({x, y, path: newPath});
-    newLocation.status = this.verifyLocationStatus(newLocation);
-
-    if(newLocation.status === 'Goal') {
-      newLocation.path.push(this.matrix.getTile(x, y));
-    }
-
-    if(newLocation.status === 'Valid') {
-      this.activeRoadMatrix[x][y].isVisited = true;
-    }
-
-    return newLocation;
-  }
-
-  findBestRoute(fromTile, toTile) {
-    const directions = ['North', 'East', 'South', 'West'];
-    const bestRoute = null;
-    this.activeRoadMatrix = this.matrix.getRoadMatrix();
-
-    this.fromLocation = new Location({x: fromTile.x, y: fromTile.y});
-    this.toLocation = new Location({x: toTile.x, y: toTile.y});
-
-    const queue = [this.fromLocation];
-    this.activeRoadMatrix[this.fromLocation.x][this.fromLocation.y].isVisited = true;
-
-    while(queue.length > 0 || bestRoute !== null) {
-      const currentLocation = queue.shift();
-
-      for(let i = 0; i < directions.length; i++) {
-        const location = this.exploreInDirection(currentLocation, directions[i]);
-
-        if(location.status === 'Goal') {
-          return location.path;
-        }
-
-        if(location.status === 'Valid') {
-          queue.push(location);
-        }
+    const lowestCostNode = knownNodes.reduce((acc, node) => {
+      let lowest = acc;
+      if(lowest === null && !processed.includes(node)) {
+        lowest = node;
       }
+      if(costs[node] < costs[lowest] && !processed.includes(node)) {
+        lowest = node;
+      }
+      return lowest;
+    }, null);
+
+    return lowestCostNode;
+  }
+
+  static dijkstra(graph) {
+    // track lowest cost to reach each node
+    const trackedCosts = Object.assign({finish: Infinity}, graph.start);
+
+    // track paths
+    const trackedParents = {finish: null};
+    Object.keys(graph.start).forEach((key) => {
+      trackedParents[key] = 'start';
+    });
+
+    // track nodes that have already been processed
+    const processedNodes = [];
+
+    // Set initial node. Pick lowest cost node.
+    let node = Navigation.findLowestCostNode(trackedCosts, processedNodes);
+
+    while(node) {
+      const costToReachNode = trackedCosts[node];
+      const childrenOfNode = graph[node];
+
+      Object.keys(childrenOfNode).forEach((child) => {
+        const costFromNodetoChild = childrenOfNode[child];
+        const costToChild = costToReachNode + costFromNodetoChild;
+
+        if(!trackedCosts[child] || trackedCosts[child] > costToChild) {
+          trackedCosts[child] = costToChild;
+          trackedParents[child] = node;
+        }
+      });
+
+      processedNodes.push(node);
+
+      node = Navigation.findLowestCostNode(trackedCosts, processedNodes);
     }
 
-    return null;
+    const optimalPath = ['finish'];
+    let parent = trackedParents.finish;
+    while(parent) {
+      optimalPath.push(parent);
+      parent = trackedParents[parent];
+    }
+    optimalPath.reverse();
+
+    const results = {
+      distance: trackedCosts.finish,
+      path: optimalPath
+    };
+
+    return results;
+  }
+
+  static createDijkstraGraph(startPoint, endPoint) {
+    const startRoadWayNode = startPoint.roadPath.way.nodes[0];
+    const endRoadWayNode = endPoint.roadPath.way.nodes[endPoint.roadPath.way.nodes.length - 1];
+    const ref = {};
+
+    function move(node, graph, name) {
+      let key = node.name;
+
+      if(name) {
+        key = name;
+      }
+
+      if(node === endRoadWayNode) {
+        key = 'finish';
+      }
+
+      if(ref[key]) {
+        return false;
+      }
+
+      ref[key] = node;
+      graph[key] = {};
+
+      node.nextNodes.forEach((nextNode) => {
+        graph[key][nextNode !== endRoadWayNode ? nextNode.name : 'finish'] = utils.getPointsDistance(node.x, node.y, nextNode.x, nextNode.y);
+
+        move(nextNode, graph);
+      });
+
+      return graph;
+    }
+
+    const graph = move(startRoadWayNode, {}, 'start');
+    return {
+      graph,
+      ref
+    };
+  }
+
+  getCachedRoute(startPoint, endPoint) {
+    return this.routes.find((route) => route.startPoint === startPoint && route.endPoint === endPoint);
+  }
+
+  findBestRoute(startPoint, endPoint) {
+    const cachedRoute = this.getCachedRoute(startPoint, endPoint);
+    if(cachedRoute) {
+      return cachedRoute.route;
+    }
+
+    const graphData = Navigation.createDijkstraGraph(startPoint, endPoint);
+    const routeData = Navigation.dijkstra(graphData.graph);
+    const routePathWayNodes = routeData.path.map((nodeName) => graphData.ref[nodeName]);
+
+    const routePathNodes = routePathWayNodes.map((wayNode, i) => {
+      if(i === 0) {
+        return startPoint;
+      }
+
+      if(i === routePathWayNodes.length - 1) {
+        return endPoint;
+      }
+
+      const nextWayNode = routePathWayNodes[i + 1];
+      const hasWayChange = wayNode.way !== nextWayNode.way;
+
+      if(hasWayChange) {
+        return wayNode.roadPathNode;
+      }
+
+      return null;
+    })
+      .filter((node) => node !== null);
+
+    this.routes.push({
+      startPoint,
+      endPoint,
+      route: routePathNodes
+    });
+
+    return routePathNodes;
   }
 }
 

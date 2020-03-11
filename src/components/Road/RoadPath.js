@@ -1,6 +1,6 @@
-import contants from '../../helpers/constants';
-import utils from '../../helpers/utils';
 import constants from '../../helpers/constants';
+import utils from '../../helpers/utils';
+import RoadPathNode from './RoadPathNode';
 
 const colors = {
   ways: {
@@ -13,6 +13,7 @@ class RoadPath {
   constructor(props) {
     this.name = props.name;
     this.way = props.way;
+    this.order = props.order;
     this.road = props.road;
     this.initPoint = null;
   }
@@ -27,6 +28,12 @@ class RoadPath {
 
     const deepPoint = this.getDeepestPoint();
     deepPoint.addNextPoint(point);
+  }
+
+  getAngle() {
+    const x = this.initPoint.nextPoints[0].x - this.initPoint.x;
+    const y = this.initPoint.nextPoints[0].y - this.initPoint.y;
+    return utils.calcAngleDegrees(x, y * -1);
   }
 
   find(condition) {
@@ -55,20 +62,59 @@ class RoadPath {
     return compare(this.initPoint);
   }
 
+  createNodeOnLineIntersection(line) {
+    const startNode = this.initPoint;
+    const endNode = this.getDeepestPoint();
+    const intersection = utils.getLinesIntersection(
+      startNode.x,
+      startNode.y,
+      endNode.x,
+      endNode.y,
+      line[0].x,
+      line[0].y,
+      line[1].x,
+      line[1].y,
+      true
+    );
+
+    if(!intersection) {
+      return null;
+    }
+
+    const newPoint = new RoadPathNode({
+      x: intersection.x,
+      y: intersection.y,
+      roadPath: this
+    });
+
+    this
+      .getNextNodeFrom(intersection.x, intersection.y)
+      .addBefore(newPoint);
+
+    return newPoint;
+  }
+
   getDeepestPoint() {
     return this.find((point) => point.nextPoints.length === 0);
   }
 
-  getPointInsideTile(tile) {
-    const halfTileSize = constants.tileSize / 2;
+  getClosestPoint(x, y) {
+    let closestPoint = null;
+    let minDist = null;
+    let dist;
 
-    return this.find((point) => {
-      if(point.x > (tile.sceneX - halfTileSize) && point.x < (tile.sceneX + halfTileSize) && point.y > (tile.sceneY - halfTileSize) && point.y < (tile.sceneY + halfTileSize)) {
-        return true;
+    this.find((point) => {
+      dist = Math.sqrt(((x - point.x) ** 2) + ((y - point.y) ** 2));
+
+      if(!closestPoint || dist < minDist) {
+        minDist = dist;
+        closestPoint = point;
       }
 
       return false;
     });
+
+    return closestPoint;
   }
 
   getPathToAnyEndPoint() {
@@ -101,13 +147,13 @@ class RoadPath {
     this.points.splice(index, 0, point);
   }
 
-  static drawOnCanvas(ctx, roadPath) {
-    const firstPoint = roadPath.initPoint;
-    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+  drawDetailsOnCanvas(ctx) {
+    const {way} = this;
+    ctx.translate((constants.worldWidth / 2) * 2, (constants.worldHeight / 2) * 2);
 
     // Lines
     ctx.beginPath();
-    ctx.strokeStyle = colors.ways[roadPath.way];
+    ctx.strokeStyle = colors.ways[way.type];
 
     function drawLines(point) {
       point.nextPoints.forEach((nextPoint) => {
@@ -115,20 +161,20 @@ class RoadPath {
           return;
         }
 
-        ctx.moveTo(point.x, point.y);
-        ctx.lineTo(nextPoint.x, nextPoint.y);
+        ctx.moveTo(point.x * 2, point.y * 2);
+        ctx.lineTo(nextPoint.x * 2, nextPoint.y * 2);
 
         drawLines(nextPoint);
       });
     }
-    drawLines(firstPoint);
+    drawLines(this.initPoint);
 
     ctx.stroke();
     ctx.closePath();
 
     // Arrows
-    const x = roadPath.initPoint.nextPoints[0].x - roadPath.initPoint.x;
-    const y = roadPath.initPoint.nextPoints[0].y - roadPath.initPoint.y;
+    const x = this.initPoint.nextPoints[0].x - this.initPoint.x;
+    const y = this.initPoint.nextPoints[0].y - this.initPoint.y;
     const angle = utils.calcAngleDegrees(x, y);
 
     let edgeX;
@@ -140,18 +186,18 @@ class RoadPath {
       }
 
       ctx.beginPath();
-      ctx.fillStyle = colors.ways[roadPath.way];
-      edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      ctx.moveTo(edgeX, edgeY);
+      ctx.fillStyle = colors.ways[way.type];
+      edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      ctx.moveTo(edgeX * 2, edgeY * 2);
 
-      edgeX = point.x - Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      edgeY = point.y - Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 12);
-      ctx.lineTo(edgeX, edgeY);
+      edgeX = point.x - Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      edgeY = point.y - Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
+      ctx.lineTo(edgeX * 2, edgeY * 2);
 
-      edgeX = point.x + Math.cos(utils.angleToRadians(angle)) * (contants.tileSize / 8);
-      edgeY = point.y + Math.sin(utils.angleToRadians(angle)) * (contants.tileSize / 8);
-      ctx.lineTo(edgeX, edgeY);
+      edgeX = point.x + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 8);
+      edgeY = point.y + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 8);
+      ctx.lineTo(edgeX * 2, edgeY * 2);
       ctx.fill();
       ctx.closePath();
       point.nextPoints.forEach((nextPoint) => {
@@ -162,13 +208,121 @@ class RoadPath {
         drawArrows(nextPoint);
       });
     }
-    drawArrows(firstPoint);
+    drawArrows(this.initPoint);
 
     // Texts
     ctx.textAlign = 'center';
     ctx.font = '11px Verdana';
     ctx.fillStyle = '#000';
-    ctx.fillText(roadPath.name, firstPoint.x, firstPoint.y + 10);
+    ctx.fillText(this.name, this.initPoint.x, this.initPoint.y + 10);
+    ctx.resetTransform();
+  }
+
+  static getPathUntilNode(fromNode, targetNode) {
+    function move(node, path = []) {
+      if(node === targetNode) {
+        path.push(node);
+        return path;
+      }
+
+      if(!node.nextPoints.length) {
+        return null;
+      }
+
+      let nextNode;
+      let foundPath;
+      for(let i = 0; i < node.nextPoints.length; i++) {
+        nextNode = node.nextPoints[i];
+        if(nextNode.roadPath !== node.roadPath) {
+          return null;
+        }
+
+        foundPath = move(nextNode, [...path, node]);
+        if(foundPath) {
+          // eslint-disable-next-line no-param-reassign
+          return foundPath;
+        }
+      }
+
+      return null;
+    }
+
+    const foundPath = move(fromNode);
+    return foundPath.length === 0 ? null : foundPath;
+  }
+
+  getNextNodeFrom(x, y) {
+    let angle1;
+    let angle2;
+    let angleDiff;
+    let maxAngleDiff;
+    let closestNextNode = null;
+
+    function move(point) {
+      if(!point.nextPoints.length) {
+        return false;
+      }
+
+      angle1 = utils.calcAngleDegrees(x - point.x, y - point.y);
+      angle2 = utils.calcAngleDegrees(x - point.nextPoints[0].x, y - point.nextPoints[0].y);
+      angleDiff = Math.abs(utils.getAnglesDiff(angle1, angle2));
+
+      if(!maxAngleDiff || angleDiff > maxAngleDiff) {
+        maxAngleDiff = angleDiff;
+        // eslint-disable-next-line prefer-destructuring
+        closestNextNode = point.nextPoints[0];
+      }
+
+      return move(point.nextPoints[0]);
+    }
+
+    move(this.initPoint);
+
+    return closestNextNode;
+  }
+
+  drawOnCanvas(ctx) {
+    if(this.order === 0) {
+      return;
+    }
+
+    const angle = this.getAngle();
+    const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
+    const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize;
+
+    ctx.translate((constants.worldWidth / 2) * 2, (constants.worldHeight / 2) * 2);
+
+    // Road lane dashed line
+    ctx.beginPath();
+    function moveLine(point) {
+      if(point.nextPoints.length) {
+        ctx.lineTo((point.x - angleModX) * 2, (point.y - angleModY) * 2);
+      } else {
+        const lastNodePos = {
+          x: (point.x - angleModX) - (Math.sin(utils.angleToRadians(angle - 90)) * constants.halfTileSize),
+          y: (point.y - angleModY) - (Math.cos(utils.angleToRadians(angle - 90)) * constants.halfTileSize)
+        };
+        ctx.lineTo(lastNodePos.x * 2, lastNodePos.y * 2);
+        return false;
+      }
+
+      return moveLine(point.nextPoints[0]);
+    }
+
+    const firstNodePos = {
+      x: (this.initPoint.x - angleModX) - (Math.sin(utils.angleToRadians(angle + 90)) * constants.halfTileSize),
+      y: (this.initPoint.y - angleModY) - (Math.cos(utils.angleToRadians(angle + 90)) * constants.halfTileSize)
+    };
+    ctx.moveTo(firstNodePos.x * 2, firstNodePos.y * 2);
+    moveLine(this.initPoint.nextPoints[0]);
+
+    ctx.lineWidth = 1;
+    ctx.setLineDash([10, 15]);
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.closePath();
+    ctx.setLineDash([]);
+
     ctx.resetTransform();
   }
 }

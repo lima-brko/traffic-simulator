@@ -14,24 +14,28 @@ import {
 import House from './House';
 import Car from './Car';
 import CarModel from './Car/CarModel';
-import Road from './Road';
+import Road, {RoadNode} from './Road';
 import WorldMatrix from '../services/WorldMatrix';
+import Navigation from '../services/Navigation';
 import TrafficLightController from '../services/TrafficLightController';
 import constants from '../helpers/constants';
 import utils from '../helpers/utils';
 
 class DarwinCity {
-  constructor() {
+  constructor(props) {
     this.scene = new Scene();
     this.scene.background = new Color(0xfae0cb);
 
+    this.carsTotal = props.carsTotal;
+    this.roadsTotal = props.roadsTotal;
+    this.roadLanes = props.roadLanes;
     this.tileSize = constants.tileSize;
     this.width = constants.worldWidth;
     this.height = constants.worldHeight;
     this.matrix = WorldMatrix;
     this.groundCanvas = document.createElement('canvas');
-    this.groundCanvas.width = this.width;
-    this.groundCanvas.height = this.height;
+    this.groundCanvas.width = this.width * 2;
+    this.groundCanvas.height = this.height * 2;
 
     this.roads = [];
     this.junctions = [];
@@ -56,18 +60,11 @@ class DarwinCity {
   drawTilesGrid() {
     const ctx = this.groundCanvas.getContext('2d');
     ctx.fillStyle = '#cac4ae';
-    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.fillRect(0, 0, this.width * 2, this.height * 2);
 
     this.matrix.getTiles().forEach((tile) => {
       ctx.strokeStyle = '#aea998';
-      ctx.strokeRect(this.tileSize * tile.x, this.tileSize * tile.y, this.tileSize, this.tileSize);
-
-      // Texts
-      // ctx.textAlign = 'left';
-      // ctx.font = '11px Verdana';
-      // ctx.fillStyle = '#000';
-      // ctx.fillText(`${this.tileSize * tile.x}-${this.tileSize * tile.y}`, this.tileSize * tile.x, this.tileSize * tile.y + 10);
-      // ctx.resetTransform();
+      ctx.strokeRect(this.tileSize * tile.x * 2, this.tileSize * tile.y * 2, this.tileSize * 2, this.tileSize * 2);
     });
   }
 
@@ -75,40 +72,58 @@ class DarwinCity {
     const ctx = this.groundCanvas.getContext('2d');
     const axes = ['Row', 'Col'];
 
-    axes.forEach((axis) => {
-      let counter = 0;
+    // Create Roads
+    for(let i = 0; i < this.roadsTotal; i++) {
+      const axis = axes[i % 2];
+      const counter = Math.floor(i / 2);
+      const tileMod = i % 2 === 0 ? 0 : this.roadsTotal % 2;
+      const tilePart = Math.floor(this.matrix.size / (Math.ceil(this.roadsTotal / 2) + 1 - tileMod));
+      const tileIndex = tilePart + (tilePart * counter);
+      const firstTile = axis === 'Col' ? this.matrix.getTile(tileIndex, 0) : this.matrix.getTile(0, tileIndex);
+      const lastTile = axis === 'Col' ? this.matrix.getTile(tileIndex, this.matrix.size - 1) : this.matrix.getTile(this.matrix.size - 1, tileIndex);
 
-      for(let i = 4; i < this.matrix.size; i += 8) {
-        counter++;
-        const tiles = [];
+      const road = new Road({
+        name: `${axis}-${counter}`,
+        nodes: [
+          new RoadNode({x: firstTile.sceneX, y: firstTile.sceneY}),
+          new RoadNode({x: lastTile.sceneX, y: lastTile.sceneY})
+        ],
+        roadLanes: this.roadLanes
+      });
 
-        for(let j = 0; j < this.matrix.size; j++) {
-          const tile = axis === 'Col' ? this.matrix.getTile(i, j) : this.matrix.getTile(j, i);
-          tiles.push(tile);
+      this.roads.push(road);
+    }
+
+    // Create Junctions
+    for(let i = 0; i < this.roads.length; i++) {
+      const road1 = this.roads[i];
+      for(let j = i + 1; j < this.roads.length; j++) {
+        const road2 = this.roads[j];
+
+        const junction = Road.createRoadsJunctions(road1, road2);
+        if(junction) {
+          this.junctions.push(junction);
         }
-
-        const road = new Road({
-          name: `${axis}-${counter}`,
-          tiles
-        });
-
-        tiles.forEach((tile) => {
-          this.matrix.setTileContent(tile.x, tile.y, road);
-        });
-
-        this.roads.forEach((road2) => {
-          const junction = Road.createRoadsJunctions(road, road2);
-          if(junction) {
-            this.junctions.push(junction);
-            this.matrix.setTileContent(junction.tile.x, junction.tile.y, junction);
-          }
-        });
-        this.roads.push(road);
       }
+    }
+
+    this.junctions.forEach((junction) => junction.connectWayTransfers());
+
+    this.roads.forEach((road) => {
+      road.ways.forEach((way) => {
+        way.updateNextNodes();
+      });
     });
 
+    // Draw Roads on canvas
     this.roads.forEach((road) => road.drawOnCanvas(ctx));
     this.junctions.forEach((junction) => junction.drawOnCanvas(ctx));
+    // this.roads.forEach((road) => road.getRoadPaths().forEach((roadPath) => {
+    //   roadPath.drawDetailsOnCanvas(ctx);
+    // }));
+    // this.roads.forEach((road) => {
+    //   road.ways.forEach((way) => way.drawOnCanvas(ctx));
+    // });
   }
 
   createCarRouteTrace(car) {
@@ -127,10 +142,10 @@ class DarwinCity {
   }
 
   onCarBrake(car) {
-    const index = this.cars.findIndex((tmpCar) => tmpCar === car);
-    this.cars.splice(index, 1);
-    this.scene.remove(car.mesh);
-    this.scene.remove(car.routeTrace);
+    // const index = this.cars.findIndex((tmpCar) => tmpCar === car);
+    // this.cars.splice(index, 1);
+    // this.scene.remove(car.mesh);
+    // this.scene.remove(car.routeTrace);
     if(this.callbacks.carAccident) {
       this.callbacks.carAccident();
     }
@@ -146,20 +161,15 @@ class DarwinCity {
     }
   }
 
-  createRandomCar(point, index) {
-    // const fromRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
-    // const roadWay = utils.getRandomInt(0, 2) === 0 ? 'even' : 'odd';
-    // const roadPaths = fromRoad.ways[roadWay];
-    // const roadPath = roadPaths[utils.getRandomInt(0, roadPaths.length)];
-    // const routePath = roadPath.getPathToAnyEndPoint();
-    const routePath = point.generatePathToAnyEndPoint();
+  createRandomCar(startPoint, endPoint, index) {
+    const routePath = Navigation.findBestRoute(startPoint, endPoint);
 
     const car = new Car({
       position: {
         x: routePath[0].x,
         y: routePath[0].y
       },
-      angle: 180
+      angle: routePath[0].roadPath.getAngle()
     });
     car.setRoute(routePath, {onArrival: this.onCarArrival.bind(this), onBrake: this.onCarBrake.bind(this)});
     // this.createCarRouteTrace(car);
@@ -183,6 +193,11 @@ class DarwinCity {
 
         for(let j = 0; j < this.cars.length; j++) {
           const car = this.cars[j];
+
+          if(car.currentRoadPath !== initPoints[i].roadPath) {
+            continue;
+          }
+
           const dist = car.mesh.position.distanceTo(initPointVec);
 
           if(!minDist) {
@@ -205,7 +220,7 @@ class DarwinCity {
   }
 
   populateCars() {
-    const onQueueCars = constants.carTotal - this.cars.length;
+    const onQueueCars = this.carsTotal - this.cars.length;
 
     if(onQueueCars === 0) {
       return;
@@ -214,11 +229,28 @@ class DarwinCity {
     const freePoints = this.getFreePointsToEnterCar();
     const len = Math.min(freePoints.length, onQueueCars);
     let randomFreePointIdx;
+    let startPoint;
+    let endRoad;
+    let endWay;
+    let endPoint;
 
     for(let i = 0; i < len; i++) {
       randomFreePointIdx = utils.getRandomInt(0, freePoints.length);
-      this.createRandomCar(freePoints.splice(randomFreePointIdx, 1)[0], this.cars.length);
+      [startPoint] = freePoints.splice(randomFreePointIdx, 1);
+      // endRoad = this.getDifferentRoad(startPoint.roadPath.way.road);
+      endRoad = this.roads[utils.getRandomInt(0, this.roads.length)];
+      endWay = endRoad.ways[utils.getRandomInt(0, endRoad.ways.length)];
+      if(endRoad === startPoint.roadPath.way.road) {
+        endWay = startPoint.roadPath.way;
+      }
+      endPoint = endWay.lanes[utils.getRandomInt(0, endWay.lanes.length)].getDeepestPoint();
+      this.createRandomCar(startPoint, endPoint, this.cars.length);
     }
+  }
+
+  getDifferentRoad(road) {
+    const differentRoads = this.roads.filter((tmpRoad) => tmpRoad !== road);
+    return differentRoads[utils.getRandomInt(0, differentRoads.length)];
   }
 
   populateBuildings() {
@@ -263,6 +295,22 @@ class DarwinCity {
     this.trafficLightController = new TrafficLightController(this.trafficLights);
   }
 
+  createCenterReference() {
+    const referenceY = new Mesh(
+      new BoxBufferGeometry(5, 125, 5),
+      new MeshBasicMaterial({color: 0xff0000}),
+    );
+    referenceY.rotation.x = -Math.PI / 2;
+    this.scene.add(referenceY);
+
+    const referenceX = new Mesh(
+      new BoxBufferGeometry(125, 5, 5),
+      new MeshBasicMaterial({color: 0xff0000}),
+    );
+    referenceX.rotation.x = -Math.PI / 2;
+    this.scene.add(referenceX);
+  }
+
   initilize() {
     this.drawTilesGrid();
     this.populateRoads();
@@ -270,21 +318,7 @@ class DarwinCity {
     // this.populateBuildings();
     this.populateCars();
     this.createGround();
-
-    // Center Reference
-    // const referenceY = new Mesh(
-    //   new BoxBufferGeometry(5, 125, 5),
-    //   new MeshBasicMaterial({color: 0xff0000}),
-    // );
-    // referenceY.rotation.x = -Math.PI / 2;
-    // this.scene.add(referenceY);
-
-    // const referenceX = new Mesh(
-    //   new BoxBufferGeometry(125, 5, 5),
-    //   new MeshBasicMaterial({color: 0xff0000}),
-    // );
-    // referenceX.rotation.x = -Math.PI / 2;
-    // this.scene.add(referenceX);
+    // this.createCenterReference();
   }
 
   getCarCollidableList(car) {
@@ -301,9 +335,13 @@ class DarwinCity {
       return dist < dangerZoneRadius;
     });
 
-    const carRoadPath = car.route[car.currentRoutePoint];
+    const carRoadPath = car.currentRoadPath;
     const trafficLights = this.trafficLights.filter((trafficLight) => {
-      if(!trafficLight.active || (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green')) {
+      if(
+        !trafficLight.active ||
+        (trafficLight.roadPath !== carRoadPath && trafficLight.state === 'green') ||
+        (car.transferingToPath && trafficLight.availableRoadPaths.indexOf(car.transferingToPath) !== -1)
+      ) {
         return false;
       }
 
@@ -339,10 +377,6 @@ class DarwinCity {
       car = this.cars[i];
       car.checkCollision(this.getCarCollidableList(car));
       car.update(i);
-
-      // for(j = i + 1; j < len; j++) {
-      // utils.checkCollision(car.hitboxMesh, collidableMeshList.slice(j));
-      // }
     }
 
     this.populateCars();
