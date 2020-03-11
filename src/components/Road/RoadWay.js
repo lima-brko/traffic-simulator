@@ -134,12 +134,12 @@ class RoadWay {
   }
 
   drawOnCanvas(ctx) {
-    ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
+    ctx.translate((constants.worldWidth / 2) * 2, (constants.worldHeight / 2) * 2);
 
     this.getAllNodes().forEach((node) => {
       ctx.beginPath();
       ctx.fillStyle = '#bb00f5';
-      ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
+      ctx.arc(node.x * 2, node.y * 2, 3, 0, 2 * Math.PI);
       ctx.lineWidth = 1;
       ctx.fill();
       ctx.closePath();
@@ -157,8 +157,8 @@ class RoadWay {
           return;
         }
 
-        ctx.moveTo(node.x, node.y);
-        ctx.lineTo(nextNode.x, nextNode.y);
+        ctx.moveTo(node.x * 2, node.y * 2);
+        ctx.lineTo(nextNode.x * 2, nextNode.y * 2);
 
         drawLines(nextNode);
       });

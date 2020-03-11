@@ -34,8 +34,8 @@ class DarwinCity {
     this.height = constants.worldHeight;
     this.matrix = WorldMatrix;
     this.groundCanvas = document.createElement('canvas');
-    this.groundCanvas.width = this.width;
-    this.groundCanvas.height = this.height;
+    this.groundCanvas.width = this.width * 2;
+    this.groundCanvas.height = this.height * 2;
 
     this.roads = [];
     this.junctions = [];
@@ -60,11 +60,11 @@ class DarwinCity {
   drawTilesGrid() {
     const ctx = this.groundCanvas.getContext('2d');
     ctx.fillStyle = '#cac4ae';
-    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.fillRect(0, 0, this.width * 2, this.height * 2);
 
     this.matrix.getTiles().forEach((tile) => {
       ctx.strokeStyle = '#aea998';
-      ctx.strokeRect(this.tileSize * tile.x, this.tileSize * tile.y, this.tileSize, this.tileSize);
+      ctx.strokeRect(this.tileSize * tile.x * 2, this.tileSize * tile.y * 2, this.tileSize * 2, this.tileSize * 2);
     });
   }
 

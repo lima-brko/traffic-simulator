@@ -149,7 +149,7 @@ class RoadPath {
 
   drawDetailsOnCanvas(ctx) {
     const {way} = this;
-    ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
+    ctx.translate((constants.worldWidth / 2) * 2, (constants.worldHeight / 2) * 2);
 
     // Lines
     ctx.beginPath();
@@ -161,8 +161,8 @@ class RoadPath {
           return;
         }
 
-        ctx.moveTo(point.x, point.y);
-        ctx.lineTo(nextPoint.x, nextPoint.y);
+        ctx.moveTo(point.x * 2, point.y * 2);
+        ctx.lineTo(nextPoint.x * 2, nextPoint.y * 2);
 
         drawLines(nextPoint);
       });
@@ -189,15 +189,15 @@ class RoadPath {
       ctx.fillStyle = colors.ways[way.type];
       edgeX = point.x + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
       edgeY = point.y + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
-      ctx.moveTo(edgeX, edgeY);
+      ctx.moveTo(edgeX * 2, edgeY * 2);
 
       edgeX = point.x - Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 12);
       edgeY = point.y - Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 12);
-      ctx.lineTo(edgeX, edgeY);
+      ctx.lineTo(edgeX * 2, edgeY * 2);
 
       edgeX = point.x + Math.cos(utils.angleToRadians(angle)) * (constants.tileSize / 8);
       edgeY = point.y + Math.sin(utils.angleToRadians(angle)) * (constants.tileSize / 8);
-      ctx.lineTo(edgeX, edgeY);
+      ctx.lineTo(edgeX * 2, edgeY * 2);
       ctx.fill();
       ctx.closePath();
       point.nextPoints.forEach((nextPoint) => {
@@ -290,19 +290,19 @@ class RoadPath {
     const angleModX = Math.sin(utils.angleToRadians(angle)) * constants.quarterTileSize;
     const angleModY = Math.cos(utils.angleToRadians(angle)) * constants.quarterTileSize;
 
-    ctx.translate(constants.worldWidth / 2, constants.worldHeight / 2);
+    ctx.translate((constants.worldWidth / 2) * 2, (constants.worldHeight / 2) * 2);
 
     // Road lane dashed line
     ctx.beginPath();
     function moveLine(point) {
       if(point.nextPoints.length) {
-        ctx.lineTo(point.x - angleModX, point.y - angleModY);
+        ctx.lineTo((point.x - angleModX) * 2, (point.y - angleModY) * 2);
       } else {
         const lastNodePos = {
           x: (point.x - angleModX) - (Math.sin(utils.angleToRadians(angle - 90)) * constants.halfTileSize),
           y: (point.y - angleModY) - (Math.cos(utils.angleToRadians(angle - 90)) * constants.halfTileSize)
         };
-        ctx.lineTo(lastNodePos.x, lastNodePos.y);
+        ctx.lineTo(lastNodePos.x * 2, lastNodePos.y * 2);
         return false;
       }
 
@@ -313,7 +313,7 @@ class RoadPath {
       x: (this.initPoint.x - angleModX) - (Math.sin(utils.angleToRadians(angle + 90)) * constants.halfTileSize),
       y: (this.initPoint.y - angleModY) - (Math.cos(utils.angleToRadians(angle + 90)) * constants.halfTileSize)
     };
-    ctx.moveTo(firstNodePos.x, firstNodePos.y);
+    ctx.moveTo(firstNodePos.x * 2, firstNodePos.y * 2);
     moveLine(this.initPoint.nextPoints[0]);
 
     ctx.lineWidth = 1;

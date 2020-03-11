@@ -118,7 +118,7 @@ class Road {
     const firstNode = this.nodes[0];
     const lastNode = this.nodes[this.nodes.length - 1];
 
-    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+    ctx.translate((contants.worldWidth / 2) * 2, (contants.worldHeight / 2) * 2);
 
     const diffX = lastNode.x - firstNode.x;
     const diffY = lastNode.y - firstNode.y;
@@ -148,13 +148,13 @@ class Road {
     ctx.beginPath();
     nodesPos.forEach((node, i) => {
       if(i === 0) {
-        ctx.moveTo(node.x, node.y);
+        ctx.moveTo(node.x * 2, node.y * 2);
         return;
       }
 
-      ctx.lineTo(node.x, node.y);
+      ctx.lineTo(node.x * 2, node.y * 2);
     });
-    ctx.lineWidth = halfTileSize * this.getTotalLanes();
+    ctx.lineWidth = halfTileSize * this.getTotalLanes() * 2;
     ctx.strokeStyle = constants.colors.road;
     ctx.stroke();
     ctx.closePath();
@@ -169,11 +169,11 @@ class Road {
     ctx.beginPath();
     nodesPos.forEach((node, i) => {
       if(i === 0) {
-        ctx.moveTo(node.x, node.y);
+        ctx.moveTo(node.x * 2, node.y * 2);
         return;
       }
 
-      ctx.lineTo(node.x, node.y);
+      ctx.lineTo(node.x * 2, node.y * 2);
     });
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#d9cd19';

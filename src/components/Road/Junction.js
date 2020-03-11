@@ -193,31 +193,31 @@ class Junction {
   drawOnCanvas(ctx) {
     const halfTileSize = constants.tileSize / 2;
 
-    ctx.translate(contants.worldWidth / 2, contants.worldHeight / 2);
+    ctx.translate(contants.worldWidth / 2 * 2, contants.worldHeight / 2 * 2);
 
     const x = this.x - (this.roads[1].getWay('even').lanes.length * halfTileSize);
     const y = this.y - (this.roads[0].getWay('even').lanes.length * halfTileSize);
 
     ctx.fillStyle = constants.colors.road;
-    ctx.fillRect(x, y, this.roads[1].getWay('even').lanes.length * constants.tileSize, this.roads[0].getWay('even').lanes.length * constants.tileSize);
+    ctx.fillRect(x * 2, y * 2, this.roads[1].getWay('even').lanes.length * constants.tileSize * 2, this.roads[0].getWay('even').lanes.length * constants.tileSize * 2);
 
-    ctx.translate(x, y);
+    ctx.translate(x * 2, y * 2);
 
     for(let i = 0; i < 4; i++) {
       if(i !== 0) {
-        ctx.translate(this.roads[i % 2].getWay('even').lanes.length * constants.tileSize, 0);
+        ctx.translate(this.roads[i % 2].getWay('even').lanes.length * constants.tileSize * 2, 0);
         ctx.rotate(utils.angleToRadians(90));
       }
 
       ctx.fillStyle = constants.colors.road;
-      ctx.fillRect(0, -15, this.roads[i % 2].getWay('even').lanes.length * constants.tileSize, 15);
+      ctx.fillRect(0, -30, this.roads[i % 2].getWay('even').lanes.length * constants.tileSize * 2, 30);
 
       ctx.fillStyle = '#fff';
 
       const whiteLinesCount = (12 * this.roads[i % 2].getWay('even').lanes.length) + 1;
       const fragmentTileSize = (constants.tileSize * this.roads[i % 2].getWay('even').lanes.length) / whiteLinesCount;
       for(let j = 1; j < whiteLinesCount; j += 2) {
-        ctx.fillRect(j * fragmentTileSize, -10, fragmentTileSize, 10);
+        ctx.fillRect(j * fragmentTileSize * 2, -20, fragmentTileSize * 2, 20);
       }
     }
 
